@@ -6,11 +6,11 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_DB: ai_dd
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - dbdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -19,9 +19,9 @@ services:
     build: .
     environment:
       DATABASE_URL: postgres://postgres@db:5432/ai_dd
-      PORT: "3000"
+      PORT: '3000'
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       db:
         condition: service_healthy

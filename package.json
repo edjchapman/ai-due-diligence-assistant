@@ -5,13 +5,18 @@
   "type": "module",
   "description": "AI due-diligence assistant: cited-source reports over a company corpus via a LangGraph.js agent, with a CI-runnable eval harness. TypeScript/Node.js portfolio project.",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "typecheck": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
     "ingest": "tsx src/ingest.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts"
@@ -23,9 +28,14 @@
     "tsx": "^4.19.2"
   },
   "devDependencies": {
-    "@types/node": "^22.10.5",
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^24.13.2",
     "drizzle-kit": "^0.31.10",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.4",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.63.0",
     "vitest": "^4.1.10"
   }
 }

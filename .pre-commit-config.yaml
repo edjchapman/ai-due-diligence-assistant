@@ -1,0 +1,13 @@
+# This repo intentionally sets NO repo-local core.hooksPath. Doing so would
+# shadow the global git-hooks dispatcher (~/.config/git/hooks) and silently
+# drop the ggshield secret scan. Instead, the global dispatcher's
+# `pre-commit run` invocation discovers this file and runs the gate below.
+repos:
+  - repo: local
+    hooks:
+      - id: make-check
+        name: make check (typecheck + lint + format + test)
+        entry: make check
+        language: system
+        pass_filenames: false
+        always_run: true
