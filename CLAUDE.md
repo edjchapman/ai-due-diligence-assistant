@@ -9,7 +9,7 @@ filings, board minutes, and public commentary, runs structured due-diligence che
 stateful **LangGraph.js** agent, and produces an **audit-grade report with cited sources** —
 plus a **CI-runnable evaluation harness** that scores its own answers.
 
-The point isn't "call an LLM." It's to show a *system* around one: retrieval with citations,
+The point isn't "call an LLM." It's to show a _system_ around one: retrieval with citations,
 a stateful agent, and — the headline signal — an **evaluation loop that runs in CI** so quality
 is measured, not asserted. Built deliberately in **TypeScript/Node.js** (see `docs/adr/0001`).
 
@@ -21,15 +21,15 @@ is measured, not asserted. Built deliberately in **TypeScript/Node.js** (see `do
 
 ## Stack
 
-| Layer | Choice | Why (short) |
-|-------|--------|-------------|
-| Language | TypeScript / Node.js (strict) | The type system is part of the "senior code" signal |
-| HTTP | Fastify | Typed, mature, conventional senior-Node backend |
-| DB | PostgreSQL + pgvector via **Drizzle ORM** | One store for relational + vector; typed, migration-first |
-| Agent | **LangGraph.js** (+ Vercel AI SDK under it) | Stateful, inspectable graph = the interview artefact |
-| Models | Anthropic (reasoning) + a cheap embedding model | Avoid frontier-model-for-embeddings cost trap |
-| Tests | Vitest | Also runs the eval harness in CI |
-| Deploy | Railway (AWS documented as the target) | Fast public demo; AWS is a documented swap, not operated |
+| Layer    | Choice                                          | Why (short)                                               |
+| -------- | ----------------------------------------------- | --------------------------------------------------------- |
+| Language | TypeScript / Node.js (strict)                   | The type system is part of the "senior code" signal       |
+| HTTP     | Fastify                                         | Typed, mature, conventional senior-Node backend           |
+| DB       | PostgreSQL + pgvector via **Drizzle ORM**       | One store for relational + vector; typed, migration-first |
+| Agent    | **LangGraph.js** (+ Vercel AI SDK under it)     | Stateful, inspectable graph = the interview artefact      |
+| Models   | Anthropic (reasoning) + a cheap embedding model | Avoid frontier-model-for-embeddings cost trap             |
+| Tests    | Vitest                                          | Also runs the eval harness in CI                          |
+| Deploy   | Railway (AWS documented as the target)          | Fast public demo; AWS is a documented swap, not operated  |
 
 Full rationale: [`docs/adr/0001-stack-and-deploy.md`](docs/adr/0001-stack-and-deploy.md).
 
@@ -78,6 +78,7 @@ npm run ingest -- <company>  # ingest CLI (M2)
 ## Roadmap
 
 ### M2 — Ingest + RAG (do this next)
+
 - Implement `src/ingest.ts`: load a small doc set for 3 reference companies (10-K excerpt,
   board-minutes sample, a news item — commit fixtures under `fixtures/`), chunk, embed via the
   Vercel AI SDK + an embedding model, and write `documents` + `chunks` (with `embedding`) to
@@ -88,17 +89,20 @@ npm run ingest -- <company>  # ingest CLI (M2)
   DB-integration test (insert + vector query). Keep the health/unit tests too.
 
 ### M3 — Agent + report API
+
 - LangGraph.js graph with a node per due-diligence check (revenue concentration, related-party,
   going-concern language, auditor switch). Each check retrieves, reasons (Claude via Vercel AI
   SDK), and returns a finding **with source citations**.
 - `GET /report/:company` → structured JSON report (findings + citations).
 
 ### M4 — Eval harness (the headline)
+
 - Golden-set fixtures (expected findings for the reference companies).
 - LLM-as-judge scoring of the agent's answers vs golden set; a deterministic pass/fail summary.
 - Run it in CI on push; publish the score to the README (a badge or a results block).
 
 ### M5 — Deploy + demo + case study
+
 - Deploy to Railway (mirror Foreman: one image, semver-pinned). Add a minimal demo page.
 - Rate-limit the public endpoints.
 - Write the recruiter-readable case study; flip the portfolio project to `Shipped`.

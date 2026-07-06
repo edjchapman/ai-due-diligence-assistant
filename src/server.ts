@@ -7,7 +7,7 @@ import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastif
 export function buildServer(opts: FastifyServerOptions = { logger: true }): FastifyInstance {
   const app = Fastify(opts);
 
-  app.get('/health', async () => ({
+  app.get('/health', () => ({
     status: 'ok',
     service: 'ai-due-diligence-assistant',
   }));

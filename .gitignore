@@ -17,5 +17,8 @@ coverage/
 # JetBrains IDE
 .idea/
 
+# Personal work-logs (from the /standup skill) — kept local, off the public repo
+standups/
+
 # Added by ggshield
 .cache_ggshield
