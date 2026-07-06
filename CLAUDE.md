@@ -1,0 +1,112 @@
+# CLAUDE.md
+
+Guidance for Claude Code (and any coding agent) working in this repository.
+
+## What this is
+
+**AI Due Diligence Assistant** — a portfolio project that ingests a target company's
+filings, board minutes, and public commentary, runs structured due-diligence checks via a
+stateful **LangGraph.js** agent, and produces an **audit-grade report with cited sources** —
+plus a **CI-runnable evaluation harness** that scores its own answers.
+
+The point isn't "call an LLM." It's to show a *system* around one: retrieval with citations,
+a stateful agent, and — the headline signal — an **evaluation loop that runs in CI** so quality
+is measured, not asserted. Built deliberately in **TypeScript/Node.js** (see `docs/adr/0001`).
+
+## Status
+
+- **M1 — done ✅** Walking skeleton: strict-TS Fastify `/health`, Postgres/pgvector schema
+  (Drizzle), docker-compose + Dockerfile, ingest stub, Vitest + typecheck **green in CI**.
+- **Next: M2** — ingest CLI + embeddings + cited retrieval. See the Roadmap below.
+
+## Stack
+
+| Layer | Choice | Why (short) |
+|-------|--------|-------------|
+| Language | TypeScript / Node.js (strict) | The type system is part of the "senior code" signal |
+| HTTP | Fastify | Typed, mature, conventional senior-Node backend |
+| DB | PostgreSQL + pgvector via **Drizzle ORM** | One store for relational + vector; typed, migration-first |
+| Agent | **LangGraph.js** (+ Vercel AI SDK under it) | Stateful, inspectable graph = the interview artefact |
+| Models | Anthropic (reasoning) + a cheap embedding model | Avoid frontier-model-for-embeddings cost trap |
+| Tests | Vitest | Also runs the eval harness in CI |
+| Deploy | Railway (AWS documented as the target) | Fast public demo; AWS is a documented swap, not operated |
+
+Full rationale: [`docs/adr/0001-stack-and-deploy.md`](docs/adr/0001-stack-and-deploy.md).
+
+## Repo layout
+
+```
+src/server.ts      Fastify app factory (buildServer) — /health today
+src/index.ts       entrypoint (listen)
+src/db/schema.ts   Drizzle schema: documents, chunks (pgvector embedding)
+src/db/client.ts   drizzle + postgres.js client
+src/db/migrate.ts  migration runner (drizzle-orm/postgres-js/migrator)
+src/ingest.ts      ingest CLI — STUB today, implemented in M2
+test/              Vitest specs (health today)
+docs/adr/          architecture decision records
+```
+
+## Dev workflow
+
+```bash
+npm ci                       # install (Node 24 / npm 11 — see guardrails)
+docker compose up -d db      # Postgres + pgvector (trust-auth dev DB)
+npm run db:migrate           # apply migrations (once generated in M2)
+npm run dev                  # Fastify on :3000  ->  curl localhost:3000/health
+npm run typecheck            # tsc (strict)
+npm test                     # vitest
+npm run ingest -- <company>  # ingest CLI (M2)
+```
+
+## Guardrails (read before you push)
+
+1. **CI must stay green. Verify locally before every push** — the loop is:
+   `rm -rf node_modules && npm ci && npm run typecheck && npm test`. Don't push red.
+2. **Node 24 / npm 11 everywhere** (CI + Dockerfile pinned). Node 22 ships npm 10, which
+   mishandles esbuild's optional per-platform binaries (`EBADPLATFORM` on the Linux runner).
+   If you change deps, regenerate the lockfile with npm 11 and clean-room `npm ci`.
+3. **No secrets — ever.** The dev DB uses passwordless `trust` auth precisely so there are no
+   password literals to leak. Keep real keys in `.env` (gitignored); `.env.example` stays empty.
+   A secret scanner runs on commit; if it fires, fix the content, don't bypass.
+4. **Keep scope lean and every layer walkable cold.** This is a deliberate TypeScript stretch;
+   prefer mature SDKs over bespoke plumbing, and don't build what you can't explain in an
+   interview. Corpus stays tiny (3 reference companies).
+5. **The eval harness is the headline** — verification, not just generation. Treat it as at
+   least as load-bearing as the demo. It must run in CI.
+6. **Conventional commits** (`feat:`, `fix:`, `chore:`, `docs:`). MIT licensed.
+
+## Roadmap
+
+### M2 — Ingest + RAG (do this next)
+- Implement `src/ingest.ts`: load a small doc set for 3 reference companies (10-K excerpt,
+  board-minutes sample, a news item — commit fixtures under `fixtures/`), chunk, embed via the
+  Vercel AI SDK + an embedding model, and write `documents` + `chunks` (with `embedding`) to
+  pgvector.
+- Generate the Drizzle migration (`npm run db:generate`) and wire `CREATE EXTENSION vector`.
+- Add a retrieval function (cosine top-k) and a `/search?q=` endpoint returning cited chunks.
+- **CI:** add a `pgvector/pgvector:pg16` service to `ci.yml`, run the migration, and add a
+  DB-integration test (insert + vector query). Keep the health/unit tests too.
+
+### M3 — Agent + report API
+- LangGraph.js graph with a node per due-diligence check (revenue concentration, related-party,
+  going-concern language, auditor switch). Each check retrieves, reasons (Claude via Vercel AI
+  SDK), and returns a finding **with source citations**.
+- `GET /report/:company` → structured JSON report (findings + citations).
+
+### M4 — Eval harness (the headline)
+- Golden-set fixtures (expected findings for the reference companies).
+- LLM-as-judge scoring of the agent's answers vs golden set; a deterministic pass/fail summary.
+- Run it in CI on push; publish the score to the README (a badge or a results block).
+
+### M5 — Deploy + demo + case study
+- Deploy to Railway (mirror Foreman: one image, semver-pinned). Add a minimal demo page.
+- Rate-limit the public endpoints.
+- Write the recruiter-readable case study; flip the portfolio project to `Shipped`.
+
+## Notes
+
+- This is a portfolio artefact by [Ed Chapman](https://github.com/edjchapman). It has a private
+  narrative/strategy home in the author's portfolio (the repo's `repo_url` points here from
+  there — the link is one-way; don't add private context to this public repo).
+- Sibling project: [Foreman](https://github.com/edjchapman/Foreman) — the event-driven
+  (Python/Django) flagship. This project deliberately covers the TypeScript/Node.js side.
