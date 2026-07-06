@@ -22,6 +22,8 @@
     "db:migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.8",
+    "ai": "^7.0.16",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.2.1",
     "postgres": "^3.4.5",
