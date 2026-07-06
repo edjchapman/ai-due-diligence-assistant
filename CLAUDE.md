@@ -24,11 +24,16 @@ is measured, not asserted. Built deliberately in **TypeScript/Node.js** (see `do
   going-concern, auditor change) retrieves company-scoped evidence, reasons a verdict (Claude via
   the Vercel AI SDK), and returns a cited finding. `GET /report/:company` → structured report.
   Keyless demo/CI via `LLM_PROVIDER=local` (deterministic heuristic); end-to-end agent test in CI.
-- **Next: M4** — eval harness (golden set + LLM-as-judge) scoring the agent in CI. The headline.
+- **M4 — done ✅** Eval harness (`src/eval.ts`): runs the agent over the reference companies and
+  scores every finding against a golden set (`src/golden.ts`) with an LLM-as-judge. `make eval` and
+  a CI step print the score table and gate the build (`12/12`, keyless/deterministic). The judge is
+  real Claude under `JUDGE_PROVIDER=anthropic`. **This is the headline — verification, not assertion.**
+- **Next: M5** — Railway deploy + minimal demo page + rate-limit public endpoints + case study.
 
-**Provider switches (keep demos/CI keyless):** `EMBED_PROVIDER=local` (lexical embedder) and
-`LLM_PROVIDER=local` (heuristic reasoner) make `make demo` and the DB tests run with no API key;
-omit them (defaults: OpenAI embeddings, Anthropic reasoning) for the real semantic path.
+**Provider switches (keep demos/CI keyless):** `EMBED_PROVIDER=local` (lexical embedder),
+`LLM_PROVIDER=local` (heuristic reasoner), and `JUDGE_PROVIDER=local` (verdict-match judge) make
+`make demo`/`make eval` and the DB tests run with no API key. Omit them (defaults: OpenAI
+embeddings, Anthropic reasoning/judge) for the real semantic + LLM-judged path.
 
 ## Stack
 
@@ -51,10 +56,13 @@ src/server.ts      Fastify app factory (buildServer) — /health, /search, /repo
 src/index.ts       entrypoint (listen)
 src/chunk.ts       paragraph-aware text chunker (pure)
 src/embeddings.ts  embeddings via Vercel AI SDK — OpenAI or keyless local (EMBED_PROVIDER)
-src/ingest.ts      ingest CLI — fixtures → chunk → embed → pgvector
+src/ingest.ts      ingest CLI + ingestAll() — fixtures → chunk → embed → pgvector
 src/checks.ts      the 4 DD checks + report types (Finding, Citation, Report)
 src/reasoner.ts    per-check verdict — Claude (Vercel AI SDK) or keyless heuristic (LLM_PROVIDER)
 src/agent.ts       LangGraph.js graph (node per check) → runReport(company)
+src/golden.ts      the golden set — expected verdicts planted in the fixtures
+src/judge.ts       LLM-as-judge (Claude) or keyless verdict-match (JUDGE_PROVIDER)
+src/eval.ts        eval harness — runEval() + CLI (`make eval`), scores vs golden
 src/demo.ts        `make demo` — prints a cited audit report per company
 src/db/schema.ts   Drizzle schema: documents, chunks (pgvector + HNSW index)
 src/db/search.ts   cosine top-k retrieval with citations (searchByVector, company-scoped)
@@ -62,7 +70,7 @@ src/db/client.ts   drizzle + postgres.js client
 src/db/migrate.ts  migration runner (drizzle-orm/postgres-js/migrator)
 fixtures/          reference-company docs + manifest.json (planted DD signals)
 drizzle/           generated migrations (0000 also CREATE EXTENSION vector)
-test/              Vitest specs (health/chunk/reasoner keyless; retrieval/agent on RUN_DB_TESTS)
+test/              Vitest specs (health/chunk/reasoner keyless; retrieval/agent/eval on RUN_DB_TESTS)
 docs/adr/          architecture decision records
 ```
 
