@@ -17,7 +17,10 @@ is measured, not asserted. Built deliberately in **TypeScript/Node.js** (see `do
 
 - **M1 — done ✅** Walking skeleton: strict-TS Fastify `/health`, Postgres/pgvector schema
   (Drizzle), docker-compose + Dockerfile, ingest stub, Vitest + typecheck **green in CI**.
-- **Next: M2** — ingest CLI + embeddings + cited retrieval. See the Roadmap below.
+- **M2 — done ✅** Ingest CLI (fixtures → chunk → OpenAI embeddings → pgvector), cosine
+  top-k retrieval with citations behind `GET /search`, and a **pgvector integration test in
+  CI** (deterministic vectors — no API key needed). ESLint/Prettier quality gate added.
+- **Next: M3** — LangGraph.js DD-check agent + `GET /report/:company`. See the Roadmap below.
 
 ## Stack
 
@@ -36,13 +39,18 @@ Full rationale: [`docs/adr/0001-stack-and-deploy.md`](docs/adr/0001-stack-and-de
 ## Repo layout
 
 ```
-src/server.ts      Fastify app factory (buildServer) — /health today
+src/server.ts      Fastify app factory (buildServer) — /health, /search
 src/index.ts       entrypoint (listen)
-src/db/schema.ts   Drizzle schema: documents, chunks (pgvector embedding)
+src/chunk.ts       paragraph-aware text chunker (pure)
+src/embeddings.ts  OpenAI embeddings via the Vercel AI SDK (embed / embedMany)
+src/ingest.ts      ingest CLI — fixtures → chunk → embed → pgvector
+src/db/schema.ts   Drizzle schema: documents, chunks (pgvector + HNSW index)
+src/db/search.ts   cosine top-k retrieval with citations (searchByVector)
 src/db/client.ts   drizzle + postgres.js client
 src/db/migrate.ts  migration runner (drizzle-orm/postgres-js/migrator)
-src/ingest.ts      ingest CLI — STUB today, implemented in M2
-test/              Vitest specs (health today)
+fixtures/          reference-company docs + manifest.json (planted DD signals)
+drizzle/           generated migrations (0000 also CREATE EXTENSION vector)
+test/              Vitest specs (health, chunk; retrieval gated on RUN_DB_TESTS)
 docs/adr/          architecture decision records
 ```
 
@@ -51,11 +59,12 @@ docs/adr/          architecture decision records
 ```bash
 npm ci                       # install (Node 24 / npm 11 — see guardrails)
 docker compose up -d db      # Postgres + pgvector (trust-auth dev DB)
-npm run db:migrate           # apply migrations (once generated in M2)
-npm run dev                  # Fastify on :3000  ->  curl localhost:3000/health
-npm run typecheck            # tsc (strict)
-npm test                     # vitest
-npm run ingest -- <company>  # ingest CLI (M2)
+npm run db:migrate           # apply migrations (+ CREATE EXTENSION vector)
+npm run ingest               # embed fixtures into pgvector (needs OPENAI_API_KEY)
+npm run dev                  # Fastify on :3000
+curl 'localhost:3000/search?q=going%20concern'   # cited retrieval
+make check                   # full gate: typecheck + lint + format + test
+RUN_DB_TESTS=1 npm test      # include the pgvector integration test (needs a live DB)
 ```
 
 ## Guardrails (read before you push)
