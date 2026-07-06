@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
+import { argv } from 'node:process';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { eq } from 'drizzle-orm';
 import { chunkText } from './chunk';
 import { db, sql } from './db/client';
@@ -77,12 +78,30 @@ async function ingestCompany(spec: CompanySpec): Promise<number> {
   return chunkCount;
 }
 
-async function main(): Promise<void> {
-  const filters = process.argv.slice(2);
+export interface IngestResult {
+  company: string;
+  chunks: number;
+}
+
+/**
+ * Ingest the reference-company fixtures, optionally filtered by name/slug.
+ * Reusable by the eval harness (M4), which ingests the corpus before scoring.
+ * Does not close the DB connection — the caller owns the pool's lifecycle.
+ */
+export async function ingestAll(filters: string[] = []): Promise<IngestResult[]> {
   const manifest = await loadManifest();
   const selected = manifest.filter((spec) => matches(spec, filters));
+  const results: IngestResult[] = [];
+  for (const spec of selected) {
+    results.push({ company: spec.company, chunks: await ingestCompany(spec) });
+  }
+  return results;
+}
 
-  if (selected.length === 0) {
+async function main(): Promise<void> {
+  const filters = argv.slice(2);
+  const results = await ingestAll(filters);
+  if (results.length === 0) {
     console.error(
       filters.length > 0
         ? `[ingest] no reference companies match: ${filters.join(', ')}`
@@ -91,15 +110,16 @@ async function main(): Promise<void> {
     process.exitCode = 1;
     return;
   }
-
-  for (const spec of selected) {
-    const count = await ingestCompany(spec);
-    console.log(`[ingest] ${spec.company}: ${count} chunks`);
+  for (const { company, chunks: count } of results) {
+    console.log(`[ingest] ${company}: ${count} chunks`);
   }
 }
 
-try {
-  await main();
-} finally {
-  await sql.end();
+// Run the CLI only when executed directly (not when imported by the eval/tests).
+if (import.meta.url === pathToFileURL(argv[1] ?? '').href) {
+  try {
+    await main();
+  } finally {
+    await sql.end();
+  }
 }

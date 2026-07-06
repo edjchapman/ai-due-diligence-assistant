@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install typecheck lint lint-fix format format-check test check demo db-up db-down
+.PHONY: help install typecheck lint lint-fix format format-check test check demo eval db-up db-down
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -42,3 +42,7 @@ demo: db-up ## Demo the current milestone end-to-end (keyless; needs Docker)
 	npm run db:migrate
 	EMBED_PROVIDER=local npm run --silent ingest
 	EMBED_PROVIDER=local LLM_PROVIDER=local npm run --silent demo
+
+eval: db-up ## Run the eval harness against the golden set (keyless; needs Docker)
+	npm run db:migrate
+	EMBED_PROVIDER=local LLM_PROVIDER=local JUDGE_PROVIDER=local npm run --silent eval
