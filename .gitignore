@@ -3,3 +3,6 @@ dist/
 .env
 *.log
 coverage/
+
+# Added by ggshield
+.cache_ggshield
