@@ -4,5 +4,18 @@ dist/
 *.log
 coverage/
 
+# Claude Code — ignore only the personal/machine-specific bits (symlinks + local
+# settings). Deliberately NOT a blanket .claude/ ignore, so a committed
+# .claude/settings.json + .claude/hooks/ bootstrap can still be tracked.
+.claude/agents
+.claude/commands
+.claude/skills
+.claude/rules
+.claude/settings.local.json
+.mcp.json
+
+# JetBrains IDE
+.idea/
+
 # Added by ggshield
 .cache_ggshield
