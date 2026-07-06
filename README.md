@@ -24,6 +24,19 @@ Ingest CLI (TS) ─▶ Postgres + pgvector (Drizzle) ─▶ Fastify API ─▶ L
 
 ## Quickstart
 
+**See it work in one command — no API key needed:**
+
+```bash
+make demo   # brings up pgvector, migrates, ingests fixtures, runs cited retrieval
+```
+
+`make demo` is the milestone demo: it runs the whole ingest → embed → cosine-retrieval
+path end-to-end and prints the top cited passage for a set of due-diligence queries. It's
+keyless by design (`EMBED_PROVIDER=local`, a deterministic lexical embedder) so it runs on
+a fresh clone with just Docker. Each milestone extends it to demo what it added.
+
+**The real thing** (semantic embeddings, HTTP endpoint):
+
 ```bash
 npm ci
 cp .env.example .env          # set DATABASE_URL, OPENAI_API_KEY (embeddings)
