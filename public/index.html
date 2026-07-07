@@ -35,6 +35,12 @@
         margin: 0 auto;
         padding: 32px 20px 64px;
       }
+      header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
       h1 {
         font-size: 22px;
         margin: 0 0 4px;
@@ -42,12 +48,57 @@
       .sub {
         color: var(--muted);
         margin: 0 0 24px;
+        max-width: 640px;
       }
-      .row {
+      .pill {
+        flex: none;
+        font-size: 12px;
+        color: var(--muted);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 10px;
+        white-space: nowrap;
+      }
+      /* Each numbered step introduces one of the two capabilities. */
+      .section {
+        margin-bottom: 24px;
+      }
+      .step {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+      .step .n {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+      }
+      .step h2 {
+        font-size: 16px;
+        margin: 0;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0 0 10px 30px;
+      }
+      .hint code {
+        color: var(--ink);
+      }
+      .controls {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-bottom: 20px;
+        margin-left: 30px;
       }
       button {
         background: var(--panel);
@@ -61,6 +112,10 @@
       button:hover {
         border-color: var(--accent);
       }
+      .company::before {
+        content: '▸ ';
+        color: var(--accent);
+      }
       input {
         flex: 1;
         min-width: 220px;
@@ -71,6 +126,24 @@
         padding: 8px 12px;
         font: inherit;
       }
+      /* Legend explaining the three verdicts a report can return. */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        margin: 0 0 12px 30px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .legend .key {
+        font-weight: 600;
+      }
+      .legend .flagged .key {
+        color: var(--flag);
+      }
+      .legend .clear .key {
+        color: var(--clear);
+      }
       .card {
         background: var(--panel);
         border: 1px solid var(--line);
@@ -78,13 +151,27 @@
         padding: 14px 16px;
         margin-bottom: 12px;
       }
+      /* A coloured left edge tells report cards and search cards apart at a glance. */
+      .card.report {
+        border-left: 3px solid var(--accent);
+      }
+      .card.searchcard {
+        border-left: 3px solid var(--muted);
+      }
+      .kicker {
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
       .finding {
         display: flex;
         gap: 10px;
         padding: 8px 0;
         border-top: 1px solid var(--line);
       }
-      .finding:first-child {
+      .finding:first-of-type {
         border-top: 0;
       }
       .badge {
@@ -107,6 +194,12 @@
         background: rgba(154, 163, 175, 0.15);
         color: var(--muted);
       }
+      /* Neutral badge for a retrieval similarity score — deliberately not green,
+         so it is never mistaken for a `clear` verdict. */
+      .score {
+        background: rgba(76, 139, 245, 0.15);
+        color: var(--accent);
+      }
       .label {
         font-weight: 600;
       }
@@ -117,6 +210,10 @@
         color: var(--muted);
         font-size: 13px;
         margin-top: 4px;
+      }
+      .cite .tag {
+        color: var(--ink);
+        font-weight: 600;
       }
       .note {
         color: var(--muted);
@@ -136,20 +233,59 @@
   </head>
   <body>
     <main>
-      <h1>AI Due Diligence Assistant</h1>
-      <p class="sub">
-        Retrieval with citations · a stateful LangGraph agent · a CI-runnable eval harness.
-      </p>
+      <header>
+        <div>
+          <h1>AI Due Diligence Assistant</h1>
+          <p class="sub">
+            Reads a company's filings and board minutes, runs four due-diligence checks, and cites
+            the exact source behind every verdict.
+          </p>
+        </div>
+        <span class="pill" title="No API key needed — deterministic local providers">
+          keyless demo mode
+        </span>
+      </header>
 
-      <div class="row" id="companies"></div>
-      <div class="row">
-        <input id="q" placeholder="Search the corpus, e.g. related-party lease" />
-        <button id="searchBtn">Search</button>
-      </div>
+      <section class="section">
+        <div class="step">
+          <span class="n">1</span>
+          <h2>Run a due-diligence report</h2>
+        </div>
+        <p class="hint">
+          Pick a company — a stateful LangGraph agent runs four checks (<span id="checkList"
+            >revenue concentration · related-party · going concern · auditor change</span
+          >), each returning a cited verdict.
+        </p>
+        <div class="controls" id="companies"></div>
+        <div class="legend">
+          <span class="flagged"><span class="key">⚑ flagged</span> concern found</span>
+          <span class="clear"><span class="key">✓ clear</span> evidence it doesn't apply</span>
+          <span class="uncertain"><span class="key">– uncertain</span> inconclusive</span>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="step">
+          <span class="n">2</span>
+          <h2>Or search the source corpus</h2>
+        </div>
+        <p class="hint">
+          Semantic (vector) retrieval over the raw document chunks — the layer the agent reads from.
+          Every hit carries its citation.
+        </p>
+        <div class="controls">
+          <input id="q" placeholder="e.g. related-party lease" />
+          <button id="searchBtn">Search</button>
+        </div>
+      </section>
 
       <div id="out"></div>
 
-      <p class="note" id="note"></p>
+      <p class="note" id="note">
+        Public demo runs in keyless deterministic mode (local embedder + heuristic reasoner). The
+        real path uses OpenAI embeddings + Claude — see the
+        <a href="https://github.com/edjchapman/AI-Due-Diligence-Assistant">repository</a>.
+      </p>
     </main>
 
     <script>
@@ -160,25 +296,39 @@
           (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c],
         );
 
+      // ⚑ / ✓ / – prefix so a verdict reads the same as the legend above.
+      const VERDICT_ICON = { flagged: '⚑', clear: '✓', uncertain: '–' };
+
       async function json(url) {
         const res = await fetch(url);
         if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || res.statusText);
         return res.json();
       }
 
+      function fmtTime(iso) {
+        const d = new Date(iso);
+        return Number.isNaN(d.getTime()) ? esc(iso) : d.toLocaleString();
+      }
+
       function renderReport(report) {
         const flags = report.findings.filter((f) => f.verdict === 'flagged').length;
+        const meta =
+          `${flags} flag(s) · ${report.findings.length} checks` +
+          (report.generatedAt ? ` · generated ${esc(fmtTime(report.generatedAt))}` : '');
         out.innerHTML =
-          `<div class="card"><div class="label">${esc(report.company)} — ${flags} flag(s)</div>` +
+          `<div class="card report"><div class="kicker">Due-diligence report</div>` +
+          `<div class="label">${esc(report.company)}</div>` +
+          `<div class="cite">${meta}</div>` +
           report.findings
             .map((f) => {
               const cite = f.citations[0];
+              const icon = VERDICT_ICON[f.verdict] || '';
               return (
-                `<div class="finding"><span class="badge ${f.verdict}">${f.verdict}</span>` +
+                `<div class="finding"><span class="badge ${f.verdict}">${icon} ${esc(f.verdict)}</span>` +
                 `<div><div class="label">${esc(f.label)}</div>` +
                 `<div class="summary">${esc(f.summary)}</div>` +
                 (cite
-                  ? `<div class="cite">↳ ${esc(cite.company)} · ${esc(cite.sourceType)} #${cite.ordinal} — “${esc(cite.snippet)}”</div>`
+                  ? `<div class="cite"><span class="tag">Evidence:</span> ${esc(cite.company)} · ${esc(cite.sourceType)} · ${esc(cite.title)} #${cite.ordinal} — “${esc(cite.snippet)}”</div>`
                   : '') +
                 `</div></div>`
               );
@@ -189,12 +339,13 @@
 
       function renderSearch(data) {
         out.innerHTML =
-          `<div class="card"><div class="label">${data.count} result(s) for “${esc(data.query)}”</div>` +
+          `<div class="card searchcard"><div class="kicker">Corpus search</div>` +
+          `<div class="label">${data.count} result(s) for “${esc(data.query)}”</div>` +
           data.results
             .map(
               (r) =>
-                `<div class="finding"><span class="badge clear">${r.score.toFixed(2)}</span>` +
-                `<div><div class="label">${esc(r.company)} · ${esc(r.sourceType)} #${r.ordinal}</div>` +
+                `<div class="finding"><span class="badge score">${r.score.toFixed(2)} match</span>` +
+                `<div><div class="label">${esc(r.company)} · ${esc(r.sourceType)} · ${esc(r.title)} #${r.ordinal}</div>` +
                 `<div class="cite">${esc(r.content.slice(0, 200))}…</div></div></div>`,
             )
             .join('') +
@@ -235,14 +386,11 @@
           }
           for (const c of companies) {
             const b = document.createElement('button');
+            b.className = 'company';
             b.textContent = c;
             b.addEventListener('click', () => report(c));
             box.appendChild(b);
           }
-          document.getElementById('note').innerHTML =
-            'Public demo runs in keyless deterministic mode (local embedder + heuristic reasoner). ' +
-            'The real path uses OpenAI embeddings + Claude — see the ' +
-            '<a href="https://github.com/edjchapman/AI-Due-Diligence-Assistant">repository</a>.';
         } catch (e) {
           document.getElementById('companies').textContent =
             'Error loading companies: ' + e.message;

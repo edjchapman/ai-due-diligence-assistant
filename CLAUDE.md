@@ -90,7 +90,8 @@ npm run ingest               # embed fixtures into pgvector (needs OPENAI_API_KE
 npm run dev                  # Fastify on :3000
 curl 'localhost:3000/search?q=going%20concern'   # cited retrieval
 curl 'localhost:3000/report/helios'              # cited DD report (needs ANTHROPIC_API_KEY)
-make demo                    # keyless end-to-end demo of the current milestone
+make demo                    # keyless end-to-end demo of the current milestone (prints to terminal)
+make serve                   # keyless end-to-end, but serves the web UI at localhost:3000
 make check                   # full gate: typecheck + lint + format + test
 RUN_DB_TESTS=1 npm test      # include the pgvector integration test (needs a live DB)
 ```

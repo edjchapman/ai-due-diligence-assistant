@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install typecheck lint lint-fix format format-check test check demo eval db-up db-down
+.PHONY: help install typecheck lint lint-fix format format-check test check demo serve eval db-up db-down
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -42,6 +42,15 @@ demo: db-up ## Demo the current milestone end-to-end (keyless; needs Docker)
 	npm run db:migrate
 	EMBED_PROVIDER=local npm run --silent ingest
 	EMBED_PROVIDER=local LLM_PROVIDER=local npm run --silent demo
+
+# Same keyless pipeline as `demo`, but instead of printing to the terminal it
+# starts the Fastify server so the web UI (public/index.html) is served at /.
+# Sibling to `demo` (kept headless/CI-friendly), not a replacement.
+serve: db-up ## Serve the web UI end-to-end at http://localhost:3000 (keyless; needs Docker)
+	npm run db:migrate
+	EMBED_PROVIDER=local npm run --silent ingest
+	@printf '\n  Web UI → http://localhost:3000  (Ctrl-C to stop)\n\n'
+	EMBED_PROVIDER=local LLM_PROVIDER=local npm run dev
 
 eval: db-up ## Run the eval harness against the golden set (keyless; needs Docker)
 	npm run db:migrate

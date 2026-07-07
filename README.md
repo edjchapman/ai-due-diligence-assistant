@@ -41,6 +41,10 @@ audit report (flagged vs clear per check, with citations) for each reference com
 keyless by design (`EMBED_PROVIDER=local` + `LLM_PROVIDER=local`, deterministic stand-ins)
 so it runs on a fresh clone with just Docker. Each milestone extends it to demo what it added.
 
+**Prefer the browser?** `make serve` runs the same keyless pipeline but starts the server
+instead of printing, so the demo page is served at **http://localhost:3000** (pick a company
+to run a cited report, or search the corpus) — no API key needed.
+
 **The real thing** (semantic embeddings + Claude, over HTTP):
 
 ```bash
