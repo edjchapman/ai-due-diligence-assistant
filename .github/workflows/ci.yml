@@ -44,3 +44,28 @@ jobs:
       # Eval harness — prints the golden-set score table and fails below threshold.
       # Keyless (local providers) so it runs on every push without secrets.
       - run: EMBED_PROVIDER=local LLM_PROVIDER=local JUDGE_PROVIDER=local npm run eval
+
+  # Ship to Railway only on a green push to main — never on PRs, and only after
+  # `build` passes (typecheck, lint, format, migration, tests, eval). The container's
+  # start:prod migrates, ingests, and serves; railway.json's /health probe gates
+  # the release. Requires a RAILWAY_TOKEN repo secret (a Railway project token);
+  # the service name defaults to `app` and can be overridden with a RAILWAY_SERVICE
+  # repo variable.
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Never let two deploys race; queue rather than cancel a release mid-flight.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm i -g @railway/cli@4
+      # --ci streams build logs and exits on completion instead of hanging.
+      - run: railway up --service "${{ vars.RAILWAY_SERVICE || 'app' }}" --ci
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

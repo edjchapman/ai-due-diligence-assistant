@@ -197,6 +197,12 @@ It's **live on Railway** at <https://app-production-e60e.up.railway.app> (config
 default** (`EMBED_PROVIDER=local`, `LLM_PROVIDER=local`) — the public demo needs no API keys and
 costs nothing per request; the boot command migrates, seeds the fixtures, and serves.
 
+**Deploys are automated.** A push to `main` that passes the full build gate (typecheck, lint,
+format, tests, eval) triggers the CI `deploy` job, which ships the image to Railway — so `main`
+is always what's live. It needs a `RAILWAY_TOKEN` repo secret (a Railway project token); the
+target service defaults to `app` (override with a `RAILWAY_SERVICE` repo variable). `railway up`
+below stays available as a manual fallback.
+
 To deploy your own (mirrors the AWS-documented target as a swap):
 
 ```bash

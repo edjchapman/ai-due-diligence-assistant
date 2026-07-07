@@ -31,8 +31,9 @@ is measured, not asserted. Built deliberately in **TypeScript/Node.js** (see `do
 - **M5 — done ✅** Minimal demo page (`public/index.html`, served at `/`), rate-limited public
   endpoints (`@fastify/rate-limit`, 60/min/IP; `/health` exempt), keyless-by-default Railway deploy
   config (`railway.json`, `.dockerignore`, `start:prod` = migrate → ingest → serve), and a
-  recruiter-readable [case study](docs/case-study.md). The live deploy is one command (`railway up`)
-  — run by the author, not from CI. `buildServer` is now async (plugins registered before routes).
+  recruiter-readable [case study](docs/case-study.md). A green push to `main` **auto-deploys to
+  Railway** via the CI `deploy` job (gated on the build job; needs a `RAILWAY_TOKEN` repo secret);
+  `railway up` remains the manual fallback. `buildServer` is now async (plugins registered before routes).
 
 **Provider switches (keep demos/CI keyless):** `EMBED_PROVIDER=local` (lexical embedder),
 `LLM_PROVIDER=local` (heuristic reasoner), and `JUDGE_PROVIDER=local` (verdict-match judge) make
