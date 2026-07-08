@@ -7,11 +7,14 @@
 
 **An AI due-diligence assistant** that ingests a target company's filings, board minutes, and public commentary, runs structured due-diligence checks via a stateful **LangGraph.js** agent, and produces an **audit-grade report with cited sources** — plus a **CI-runnable evaluation harness** that scores its own answers. A portfolio project by [Ed Chapman](https://github.com/edjchapman) demonstrating end-to-end ownership of a production-shaped LLM system in **TypeScript/Node.js**: design, build, deploy, operate, evaluate.
 
-> **Status: `M5` (deploy + demo + case study).** The full system is in place: ingest → cited
-> retrieval → a LangGraph.js agent (`GET /report/:company`) → an **eval harness that scores every
-> finding against a golden set and runs in CI on every push** (see [Evaluation](#evaluation)).
-> A minimal demo page, rate-limited endpoints, and a keyless-by-default Railway deploy config ship
-> here; read the [case study](docs/case-study.md). Quality is measured, not asserted.
+> **Status: `M6` (PDF ingestion + structured extraction).** The full system is in place: PDF/Markdown
+> ingest → cited retrieval → a LangGraph.js agent (`GET /report/:company`) → an **eval harness that
+> scores every finding against a golden set and runs in CI on every push** (see [Evaluation](#evaluation)).
+> M6 adds the "front half": a real filing **PDF** is decoded (keyless) and structured into typed DD
+> fields (`GET /extract/:company`), scored with a precision/recall/F1 test — see
+> [ADR 0002](docs/adr/0002-pdf-extraction.md). A demo page, rate-limited endpoints, and a
+> keyless-by-default Railway deploy ship here; read the [case study](docs/case-study.md). Quality is
+> measured, not asserted.
 
 ## Why this exists
 
@@ -23,7 +26,7 @@ Most engineers can call an LLM API. Fewer can show a _system_ around it: retriev
 Ingest CLI (TS) ─▶ Postgres + pgvector (Drizzle) ─▶ Fastify API ─▶ LangGraph.js agent ─▶ Eval harness (golden + LLM-as-judge, in CI)
 ```
 
-- **Fastify** typed HTTP surface — a demo page at `/`, plus `/health`, `/companies`, `/search`, `/report/:company` (rate-limited). The eval harness is a CLI + CI gate, not an endpoint.
+- **Fastify** typed HTTP surface — a demo page at `/`, plus `/health`, `/companies`, `/search`, `/report/:company`, `/extract/:company` (rate-limited). The eval harness is a CLI + CI gate, not an endpoint.
 - **Postgres + pgvector** via **Drizzle ORM** — one store for relational metadata and vector retrieval.
 - **LangGraph.js** stateful agent — a node per due-diligence check, each retrieving, reasoning (Claude via the **Vercel AI SDK**), and returning a cited finding.
 - **Eval harness** (Vitest) — golden-set + LLM-as-judge, runnable in CI.
@@ -159,6 +162,52 @@ curl "$BASE/report/helios"
 > `ANTHROPIC_API_KEY` and `EMBED_PROVIDER=openai` / `LLM_PROVIDER=anthropic` — same request/response
 > shapes.
 
+### `GET /extract/:company`
+
+Returns the **structured DD fields extracted from the company's documents** (M6) — the "front
+half" that turns an unstructured filing into typed data. A real filing **PDF** (`filing-summary.pdf`)
+is decoded (keyless `unpdf`) and flows through the same ingest pipeline as the Markdown; each field
+group maps 1:1 onto a check and carries the evidence sentence it was read from.
+
+```bash
+curl "$BASE/extract/northwind"
+```
+
+```jsonc
+{
+  "company": "Northwind Materials Inc.",
+  "documents": [
+    {
+      "title": "Northwind Materials — FY2025 Filing Summary (PDF)",
+      "sourceType": "filing-summary",
+      "extraction": {
+        "revenueConcentration": {
+          "largestCustomerPct": 62,
+          "largestCustomer": "Pallas Automotive Group",
+          "evidence": "… 62% of total net revenue …",
+        },
+        "relatedParties": [],
+        "goingConcern": {
+          "substantialDoubt": false,
+          "evidence": "… substantial doubt … does not exist.",
+        },
+        "auditor": {
+          "changed": true,
+          "auditorName": "Crestline Audit LLP",
+          "evidence": "… dismissed Barrow & Finch LLP and engaged Crestline Audit LLP …",
+        },
+      },
+    },
+    // … one entry per document (extraction may be null)
+  ],
+}
+```
+
+> Extraction defaults to the **keyless** `local` reader (`EXTRACT_PROVIDER=local`); set
+> `EXTRACT_PROVIDER=anthropic` for Claude structured extraction (`generateObject`). Accuracy is
+> measured with a field-level **precision/recall/F1** test (`test/extract.test.ts`). See
+> [ADR 0002](docs/adr/0002-pdf-extraction.md).
+
 ## Evaluation
 
 The headline signal: quality is **measured, not asserted**. The harness runs the agent over
@@ -235,6 +284,7 @@ make eval           # the eval harness (keyless)
 - [x] **M3** — LangGraph.js DD-check agent (node per check) + `GET /report/:company` with citations.
 - [x] **M4** — eval harness (golden set + LLM-as-judge) scoring the agent, running in CI (`12/12`).
 - [x] **M5** — demo page + rate-limited endpoints + [case study](docs/case-study.md); **deployed live on Railway** ([demo](https://app-production-e60e.up.railway.app)).
+- [x] **M6** — PDF ingestion (keyless `unpdf`) + structured extraction (`GET /extract/:company`) with a field-level precision/recall/F1 test ([ADR 0002](docs/adr/0002-pdf-extraction.md)).
 
 ## License
 

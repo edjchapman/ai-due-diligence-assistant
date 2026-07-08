@@ -1,7 +1,7 @@
 import { runReport } from './agent';
 import type { Finding, Verdict } from './checks';
 import { sql } from './db/client';
-import { listCompanies } from './db/search';
+import { getExtractions, listCompanies } from './db/search';
 
 /**
  * Milestone demo (M3): run the due-diligence agent over every ingested company
@@ -48,8 +48,35 @@ async function main(): Promise<void> {
     const flags = report.findings.filter((f) => f.verdict === 'flagged').length;
     console.log(`  ═══ ${company} ═══   (${flags} flag${flags === 1 ? '' : 's'})`);
     for (const finding of report.findings) renderFinding(finding);
+    await renderExtraction(company);
     console.log('');
   }
+}
+
+/**
+ * Print the structured fields extracted (M6) from the company's PDF filing
+ * summary — the "front half" that turns unstructured filing text into typed data.
+ */
+async function renderExtraction(company: string): Promise<void> {
+  const docs = await getExtractions(company);
+  const source =
+    docs.find((d) => d.sourceType === 'filing-summary') ?? docs.find((d) => d.extraction);
+  const e = source?.extraction;
+  if (!e) return;
+  const parts: string[] = [];
+  const { largestCustomer, largestCustomerPct } = e.revenueConcentration;
+  if (largestCustomerPct !== null) {
+    parts.push(`largest customer ${largestCustomer ?? '?'} ${largestCustomerPct}%`);
+  }
+  if (e.relatedParties.length > 0) {
+    parts.push(`related party ${e.relatedParties.map((r) => r.counterparty).join(', ')}`);
+  }
+  if (e.goingConcern.substantialDoubt) parts.push('going-concern doubt');
+  if (e.auditor.changed) parts.push(`auditor changed → ${e.auditor.auditorName ?? '?'}`);
+  else if (e.auditor.auditorName) parts.push(`auditor ${e.auditor.auditorName}`);
+  console.log(
+    `    ⤷ extracted from PDF: ${parts.length > 0 ? parts.join(' · ') : '(no salient fields)'}`,
+  );
 }
 
 try {

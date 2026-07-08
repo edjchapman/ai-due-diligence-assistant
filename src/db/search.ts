@@ -1,4 +1,5 @@
 import { and, cosineDistance, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import type { Extraction } from '../extract';
 import { db } from './client';
 import { chunks, documents } from './schema';
 
@@ -22,6 +23,29 @@ export interface SearchOptions {
 export async function listCompanies(): Promise<string[]> {
   const rows = await db.selectDistinct({ company: documents.company }).from(documents);
   return rows.map((r) => r.company);
+}
+
+/** One document's structured extraction (M6), with its source for citation. */
+export interface DocumentExtraction {
+  title: string;
+  sourceType: string;
+  extraction: Extraction | null;
+}
+
+/**
+ * The per-document structured extractions for a company (M6). Returns every
+ * document (extraction may be null); the consolidated filing-summary PDF carries
+ * the fullest set of fields. Powers `GET /extract/:company` and the demo.
+ */
+export async function getExtractions(company: string): Promise<DocumentExtraction[]> {
+  return db
+    .select({
+      title: documents.title,
+      sourceType: documents.sourceType,
+      extraction: documents.extraction,
+    })
+    .from(documents)
+    .where(eq(documents.company, company));
 }
 
 /**

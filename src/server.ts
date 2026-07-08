@@ -4,7 +4,7 @@ import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import { runReport } from './agent';
-import { listCompanies, searchByVector } from './db/search';
+import { getExtractions, listCompanies, searchByVector } from './db/search';
 import { embedQuery } from './embeddings';
 
 /** `?q=` is required; `?k=` (1–20) is an optional result count. */
@@ -67,6 +67,19 @@ export async function buildServer(
       return reply.code(404).send({ error: `no ingested company matches "${company}"` });
     }
     return runReport(match);
+  });
+
+  // Structured fields extracted from the company's documents (M6) — the front
+  // half: unstructured filing text → typed DD fields with evidence. Same
+  // case-insensitive company resolution as `/report`.
+  app.get('/extract/:company', async (request, reply) => {
+    const { company } = request.params as { company: string };
+    const companies = await listCompanies();
+    const match = companies.find((c) => c.toLowerCase().includes(company.toLowerCase()));
+    if (!match) {
+      return reply.code(404).send({ error: `no ingested company matches "${company}"` });
+    }
+    return { company: match, documents: await getExtractions(match) };
   });
 
   return app;

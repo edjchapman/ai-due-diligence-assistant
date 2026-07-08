@@ -1,4 +1,5 @@
-import { pgTable, uuid, text, integer, timestamp, vector, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, timestamp, vector, index, jsonb } from 'drizzle-orm/pg-core';
+import type { Extraction } from '../extract';
 
 /**
  * Embedding dimensionality. Fixed at column-creation by pgvector, so it lives in
@@ -14,6 +15,9 @@ export const documents = pgTable('documents', {
   company: text('company').notNull(),
   sourceType: text('source_type').notNull(),
   title: text('title').notNull(),
+  // Structured DD fields extracted from this document's text (M6). Nullable — a
+  // document is ingested (and retrievable) whether or not extraction found anything.
+  extraction: jsonb('extraction').$type<Extraction>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

@@ -17,6 +17,11 @@
         "sourceType": "news",
         "title": "Northwind Materials — Trade Press, Apr 2025",
         "file": "news.md"
+      },
+      {
+        "sourceType": "filing-summary",
+        "title": "Northwind Materials — FY2025 Filing Summary (PDF)",
+        "file": "filing-summary.pdf"
       }
     ]
   },
@@ -38,6 +43,11 @@
         "sourceType": "news",
         "title": "Helios Robotics — Trade Press, Mar 2025",
         "file": "news.md"
+      },
+      {
+        "sourceType": "filing-summary",
+        "title": "Helios Robotics — FY2025 Filing Summary (PDF)",
+        "file": "filing-summary.pdf"
       }
     ]
   },
@@ -55,7 +65,16 @@
         "title": "Meridian Foods — Board Minutes, 09 Jan 2025",
         "file": "board-minutes.md"
       },
-      { "sourceType": "news", "title": "Meridian Foods — Trade Press, Feb 2025", "file": "news.md" }
+      {
+        "sourceType": "news",
+        "title": "Meridian Foods — Trade Press, Feb 2025",
+        "file": "news.md"
+      },
+      {
+        "sourceType": "filing-summary",
+        "title": "Meridian Foods — FY2025 Filing Summary (PDF)",
+        "file": "filing-summary.pdf"
+      }
     ]
   }
 ]

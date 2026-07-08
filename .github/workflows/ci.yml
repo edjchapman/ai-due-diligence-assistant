@@ -43,7 +43,7 @@ jobs:
       - run: npm test
       # Eval harness — prints the golden-set score table and fails below threshold.
       # Keyless (local providers) so it runs on every push without secrets.
-      - run: EMBED_PROVIDER=local LLM_PROVIDER=local JUDGE_PROVIDER=local npm run eval
+      - run: EMBED_PROVIDER=local EXTRACT_PROVIDER=local LLM_PROVIDER=local JUDGE_PROVIDER=local npm run eval
 
   # Ship to Railway only on a green push to main — never on PRs, and only after
   # `build` passes (typecheck, lint, format, migration, tests, eval). The container's

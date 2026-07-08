@@ -19,6 +19,7 @@
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
     "ingest": "tsx src/ingest.ts",
+    "fixtures:pdf": "tsx scripts/generate-pdf-fixtures.ts",
     "demo": "tsx src/demo.ts",
     "eval": "tsx src/eval.ts",
     "db:generate": "drizzle-kit generate",
@@ -35,6 +36,7 @@
     "fastify": "^5.2.1",
     "postgres": "^3.4.5",
     "tsx": "^4.19.2",
+    "unpdf": "^1.6.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {

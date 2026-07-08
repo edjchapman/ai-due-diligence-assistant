@@ -1,12 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { argv } from 'node:process';
-import { dirname, join } from 'node:path';
+import { dirname, extname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { eq } from 'drizzle-orm';
 import { chunkText } from './chunk';
 import { db, sql } from './db/client';
 import { chunks, documents } from './db/schema';
 import { embedTexts } from './embeddings';
+import { extract } from './extract';
+import { decodePdf } from './pdf';
 
 /**
  * Ingest CLI (M2). Loads the reference-company fixtures, chunks each document,
@@ -34,6 +36,25 @@ interface CompanySpec {
 
 const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 
+/**
+ * Load a fixture document's text, dispatching on file extension. Markdown/text
+ * files are read verbatim (the M2 path, unchanged); PDFs (M6) are decoded via
+ * `decodePdf` so a real filing flows through the *same* chunk → embed → store
+ * pipeline. The decoded text is what feeds both retrieval and extraction.
+ */
+async function readDocumentText(slug: string, file: string): Promise<string> {
+  const path = join(FIXTURES_DIR, slug, file);
+  switch (extname(file).toLowerCase()) {
+    case '.md':
+    case '.txt':
+      return readFile(path, 'utf8');
+    case '.pdf':
+      return decodePdf(new Uint8Array(await readFile(path)));
+    default:
+      throw new Error(`unsupported fixture format: ${file}`);
+  }
+}
+
 async function loadManifest(): Promise<CompanySpec[]> {
   const raw = await readFile(join(FIXTURES_DIR, 'manifest.json'), 'utf8');
   return JSON.parse(raw) as CompanySpec[];
@@ -51,7 +72,7 @@ async function ingestCompany(spec: CompanySpec): Promise<number> {
 
   let chunkCount = 0;
   for (const doc of spec.documents) {
-    const text = await readFile(join(FIXTURES_DIR, spec.slug, doc.file), 'utf8');
+    const text = await readDocumentText(spec.slug, doc.file);
     const texts = chunkText(text);
     if (texts.length === 0) continue;
 
@@ -60,9 +81,13 @@ async function ingestCompany(spec: CompanySpec): Promise<number> {
       throw new Error(`embedding count (${embeddings.length}) != chunk count (${texts.length})`);
     }
 
+    // Structured DD extraction (M6) over the same decoded text — stored on the
+    // document so it can be surfaced (`/extract`, demo) alongside the report.
+    const extraction = await extract(text);
+
     const inserted = await db
       .insert(documents)
-      .values({ company: spec.company, sourceType: doc.sourceType, title: doc.title })
+      .values({ company: spec.company, sourceType: doc.sourceType, title: doc.title, extraction })
       .returning({ id: documents.id });
     const documentRow = inserted[0];
     if (!documentRow) throw new Error(`failed to insert document: ${doc.title}`);

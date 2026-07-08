@@ -66,6 +66,16 @@ Ingest CLI ─▶ Postgres + pgvector ─▶ Fastify API ─▶ LangGraph.js age
   correctly _clears_ the clean company and reads a _negated_ going-concern note as clear reaches
   100%. The corpus was built for the eval, not bolted on after.
 
+- **A real extraction front-door, not just clean text in.** A filing **PDF** is decoded (keyless
+  `unpdf`) and flows through the same chunk → embed → retrieve pipeline as everything else, and a
+  structured-extraction stage reads typed DD fields (largest-customer %, related parties,
+  going-concern doubt, auditor change) — each with the evidence sentence it came from — into the
+  report. Accuracy isn't asserted: a field-level **precision/recall/F1** test scores the extractor
+  against a golden set, keyless, in CI. It's the same shape as a production pipeline I built (PDF →
+  structured fields via Claude, with an LLM-as-judge quality gate), re-expressed on filings and in
+  TypeScript. Amazon Textract (OCR / scanned filings) is a documented swap; see
+  [ADR 0002](adr/0002-pdf-extraction.md).
+
 - **A quality gate that reads like senior code.** Strict TypeScript, type-checked ESLint,
   Prettier, and a `make check` gate mirrored in CI and a pre-commit hook. `make demo` and
   `make eval` reproduce the whole thing end-to-end in one command.
@@ -78,6 +88,6 @@ target). Full rationale in [ADR 0001](adr/0001-stack-and-deploy.md).
 
 ## Status
 
-M1–M4 shipped and green in CI; M5 (deploy + this case study) in place. Deploy config targets
-Railway (one image, `/health` probe, keyless public demo by default); see the README for the
-one-command deploy.
+M1–M5 shipped and green in CI; M6 (PDF ingestion + structured extraction, with a
+precision/recall/F1 test) in place. Deploy config targets Railway (one image, `/health` probe,
+keyless public demo by default); see the README for the one-command deploy.

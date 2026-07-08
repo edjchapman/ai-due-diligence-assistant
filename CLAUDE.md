@@ -34,11 +34,21 @@ is measured, not asserted. Built deliberately in **TypeScript/Node.js** (see `do
   recruiter-readable [case study](docs/case-study.md). A green push to `main` **auto-deploys to
   Railway** via the CI `deploy` job (gated on the build job; needs a `RAILWAY_TOKEN` repo secret);
   `railway up` remains the manual fallback. `buildServer` is now async (plugins registered before routes).
+- **M6 — done ✅** PDF ingestion + structured extraction (the "front half"): a real filing PDF is
+  decoded (`src/pdf.ts`, keyless `unpdf`) and flows through the _same_ chunk → embed → pgvector
+  pipeline, and `src/extract.ts` reads typed DD fields (mapped 1:1 to the four checks, each with an
+  evidence snippet) into a `documents.extraction` jsonb column, surfaced at `GET /extract/:company`
+  and in the demo. A keyless field-level **precision/recall/F1** test (`test/extract.test.ts` vs
+  `src/golden-extract.ts`) rides `npm test`. The eval stays `12/12` — the PDF fixtures reinforce the
+  planted signals. See [ADR 0002](docs/adr/0002-pdf-extraction.md). Textract is a documented swap.
 
 **Provider switches (keep demos/CI keyless):** `EMBED_PROVIDER=local` (lexical embedder),
-`LLM_PROVIDER=local` (heuristic reasoner), and `JUDGE_PROVIDER=local` (verdict-match judge) make
-`make demo`/`make eval` and the DB tests run with no API key. Omit them (defaults: OpenAI
-embeddings, Anthropic reasoning/judge) for the real semantic + LLM-judged path.
+`LLM_PROVIDER=local` (heuristic reasoner), `JUDGE_PROVIDER=local` (verdict-match judge), and
+`EXTRACT_PROVIDER=local` (regex extractor — the **default**, unlike the others) make `make demo`/
+`make eval` and the DB tests run with no API key. `PDF_PROVIDER=local` (default `unpdf`) decodes
+text-layer PDFs keyless; `PDF_PROVIDER=textract` is a documented swap, not built. Omit the reasoning/
+embedding/judge switches (defaults: OpenAI embeddings, Anthropic reasoning/judge, `EXTRACT_PROVIDER=anthropic`)
+for the real semantic + LLM-judged/extracted path.
 
 ## Stack
 
@@ -57,27 +67,31 @@ Full rationale: [`docs/adr/0001-stack-and-deploy.md`](docs/adr/0001-stack-and-de
 ## Repo layout
 
 ```
-src/server.ts      Fastify factory (async buildServer) — /, /health, /companies, /search, /report; rate-limited
+src/server.ts      Fastify factory (async buildServer) — /, /health, /companies, /search, /report, /extract; rate-limited
 public/index.html  minimal demo page (served at /)
 railway.json       Railway deploy config (Dockerfile, /health probe)
 src/index.ts       entrypoint (listen)
 src/chunk.ts       paragraph-aware text chunker (pure)
 src/embeddings.ts  embeddings via Vercel AI SDK — OpenAI or keyless local (EMBED_PROVIDER)
-src/ingest.ts      ingest CLI + ingestAll() — fixtures → chunk → embed → pgvector
+src/pdf.ts         decodePdf() — text-layer PDF → text (keyless unpdf; Textract documented, PDF_PROVIDER)
+src/ingest.ts      ingest CLI + ingestAll() — fixtures (md/pdf) → decode → chunk → embed → pgvector + extract
+src/extract.ts     structured DD extraction — Claude generateObject or keyless regex (EXTRACT_PROVIDER; default local)
 src/checks.ts      the 4 DD checks + report types (Finding, Citation, Report)
 src/reasoner.ts    per-check verdict — Claude (Vercel AI SDK) or keyless heuristic (LLM_PROVIDER)
 src/agent.ts       LangGraph.js graph (node per check) → runReport(company)
 src/golden.ts      the golden set — expected verdicts planted in the fixtures
+src/golden-extract.ts  extraction golden set — expected DD fields in each company's PDF summary
 src/judge.ts       LLM-as-judge (Claude) or keyless verdict-match (JUDGE_PROVIDER)
 src/eval.ts        eval harness — runEval() + CLI (`make eval`), scores vs golden
-src/demo.ts        `make demo` — prints a cited audit report per company
-src/db/schema.ts   Drizzle schema: documents, chunks (pgvector + HNSW index)
-src/db/search.ts   cosine top-k retrieval with citations (searchByVector, company-scoped)
+src/demo.ts        `make demo` — prints a cited audit report + extracted fields per company
+src/db/schema.ts   Drizzle schema: documents (+ extraction jsonb), chunks (pgvector + HNSW index)
+src/db/search.ts   cosine top-k retrieval with citations (searchByVector) + getExtractions, company-scoped
 src/db/client.ts   drizzle + postgres.js client
 src/db/migrate.ts  migration runner (drizzle-orm/postgres-js/migrator)
-fixtures/          reference-company docs + manifest.json (planted DD signals)
-drizzle/           generated migrations (0000 also CREATE EXTENSION vector)
-test/              Vitest specs (health/chunk/reasoner keyless; retrieval/agent/eval on RUN_DB_TESTS)
+scripts/generate-pdf-fixtures.ts  `npm run fixtures:pdf` — regenerate the committed PDF fixtures (zero-dep writer)
+fixtures/          reference-company docs (md + filing-summary.pdf) + manifest.json (planted DD signals)
+drizzle/           generated migrations (0000 also CREATE EXTENSION vector; 0001 adds documents.extraction)
+test/              Vitest specs (health/chunk/reasoner/extract keyless; retrieval/agent/eval on RUN_DB_TESTS)
 docs/adr/          architecture decision records
 ```
 
