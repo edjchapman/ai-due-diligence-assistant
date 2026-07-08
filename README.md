@@ -1,6 +1,7 @@
 # AI Due Diligence Assistant
 
 [![CI](https://github.com/edjchapman/ai-due-diligence-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/edjchapman/ai-due-diligence-assistant/actions/workflows/ci.yml)
+[![deploy](https://img.shields.io/github/actions/workflow/status/edjchapman/ai-due-diligence-assistant/ci.yml?branch=main&label=deploy)](https://github.com/edjchapman/ai-due-diligence-assistant/actions/workflows/ci.yml?query=branch%3Amain)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **▶ Live demo: <https://app-production-e60e.up.railway.app>** (keyless deterministic mode — see [API](#api)).
