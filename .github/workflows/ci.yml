@@ -69,3 +69,21 @@ jobs:
       - run: railway up --service "${{ vars.RAILWAY_SERVICE || 'app' }}" --ci
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      # Post-deploy smoke test: poll the live /health until it returns 200, so a
+      # deploy that builds but doesn't actually serve traffic still fails the job
+      # (and turns the deploy badge red). Retries cover the brief window before the
+      # new release is routed. Override the URL with a PRODUCTION_URL repo variable.
+      - name: Smoke test /health
+        run: |
+          url="${{ vars.PRODUCTION_URL || 'https://app-production-e60e.up.railway.app' }}/health"
+          for attempt in $(seq 1 10); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "$url" || echo 000)
+            echo "attempt ${attempt}: ${url} -> ${code}"
+            if [ "${code}" = "200" ]; then
+              echo "production is healthy"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "production did not return 200 after 10 attempts" >&2
+          exit 1
