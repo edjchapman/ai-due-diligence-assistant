@@ -93,11 +93,15 @@ Ingest CLI ─▶ Postgres + pgvector ─▶ Fastify API ─▶ LangGraph.js age
 ## Stack
 
 TypeScript/Node.js (strict) · Fastify · PostgreSQL + pgvector via Drizzle ORM · LangGraph.js +
-Vercel AI SDK (Anthropic + OpenAI embeddings) · Vitest · Docker · Railway (AWS documented as the
-target). Full rationale in [ADR 0001](adr/0001-stack-and-deploy.md).
+Vercel AI SDK (Anthropic + OpenAI embeddings) · React 19 + Vite (demo UI) · Vitest · Docker ·
+Railway (AWS documented as the target). Full rationale in
+[ADR 0001](adr/0001-stack-and-deploy.md).
 
 ## Status
 
-M1–M5 shipped and green in CI; M6 (PDF ingestion + structured extraction, with a
-precision/recall/F1 test) in place. Deploy config targets Railway (one image, `/health` probe,
-keyless public demo by default); see the README for the one-command deploy.
+M1–M6 shipped and green in CI: the full pipeline (PDF ingestion + structured extraction with a
+precision/recall/F1 test, cited retrieval, the agent, and the eval gate). M7 rebuilt the demo as
+a typed **React 19 + Vite** frontend with component tests and shared server types
+([ADR 0003](adr/0003-react-frontend.md)). Deploys target Railway (one image, `/health` probe,
+keyless public demo by default) and ship automatically on a green push to `main`; see the README
+for the one-command deploy.
