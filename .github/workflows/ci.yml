@@ -3,6 +3,14 @@ name: CI
 on:
   push:
     branches: [main]
+    # Docs-only merges don't cycle the production container: the full gate
+    # already ran on the PR, and none of these paths ship in the app's runtime
+    # surface. Any code/config/workflow change still deploys. (paths-ignore
+    # skips the push run only when EVERY changed file matches a pattern.)
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
   pull_request:
 
 jobs:
