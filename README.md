@@ -6,6 +6,14 @@
 
 **▶ Live demo: <https://app-production-e60e.up.railway.app>** (keyless deterministic mode — see [API](#api)).
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/demo-dark.png" />
+  <img
+    alt="Demo page — a cited due-diligence report for Northwind Materials with two flagged checks, source citations, and structured extracted fields"
+    src="docs/images/demo-light.png"
+  />
+</picture>
+
 **An AI due-diligence assistant** that ingests a target company's filings, board minutes, and public commentary, runs structured due-diligence checks via a stateful **LangGraph.js** agent, and produces an **audit-grade report with cited sources** — plus a **CI-runnable evaluation harness** that scores its own answers. A portfolio project by [Ed Chapman](https://github.com/edjchapman) demonstrating end-to-end ownership of a production-shaped LLM system in **TypeScript/Node.js**: design, build, deploy, operate, evaluate.
 
 > **Status: `M6` (PDF ingestion + structured extraction).** The full system is in place: PDF/Markdown
@@ -238,9 +246,14 @@ Two honest layers:
 
 ## Demo page & deploy
 
-A minimal demo page (served at `/`) lists the companies, runs a report, and searches the corpus —
-no build step, just static HTML calling the API. Public endpoints (`/search`, `/report`,
-`/companies`) are rate-limited to 60/min/IP; `/health` is exempt for platform probes.
+A minimal demo page (served at `/`) runs a cited report per company and searches the corpus —
+no build step or framework, one self-contained static HTML file calling the API (screenshot
+above). Each report opens with a per-check **verdict strip**, then one card per check showing the
+agent's summary, **every citation** (source · chunk · cosine score), and the **structured fields
+read from the filing PDF** (`GET /extract/:company`) so the extraction corroborates the agent's
+verdict side-by-side. Light/dark theme follows the OS; loading skeletons and error states are
+plain CSS. Public endpoints (`/search`, `/report`, `/extract`, `/companies`) are rate-limited to
+60/min/IP; `/health` is exempt for platform probes.
 
 It's **live on Railway** at <https://app-production-e60e.up.railway.app> (config in
 [`railway.json`](railway.json): one Docker image, `/health` probe). The container is **keyless by

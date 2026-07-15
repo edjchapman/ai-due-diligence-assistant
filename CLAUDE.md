@@ -68,7 +68,7 @@ Full rationale: [`docs/adr/0001-stack-and-deploy.md`](docs/adr/0001-stack-and-de
 
 ```
 src/server.ts      Fastify factory (async buildServer) — /, /health, /companies, /search, /report, /extract; rate-limited
-public/index.html  minimal demo page (served at /)
+public/index.html  demo page (served at /) — self-contained, light/dark; verdict strip, cited findings + /extract fields
 railway.json       Railway deploy config (Dockerfile, /health probe)
 src/index.ts       entrypoint (listen)
 src/chunk.ts       paragraph-aware text chunker (pure)
@@ -91,7 +91,7 @@ src/db/migrate.ts  migration runner (drizzle-orm/postgres-js/migrator)
 scripts/generate-pdf-fixtures.ts  `npm run fixtures:pdf` — regenerate the committed PDF fixtures (zero-dep writer)
 fixtures/          reference-company docs (md + filing-summary.pdf) + manifest.json (planted DD signals)
 drizzle/           generated migrations (0000 also CREATE EXTENSION vector; 0001 adds documents.extraction)
-test/              Vitest specs (health/chunk/reasoner/extract keyless; retrieval/agent/eval on RUN_DB_TESTS)
+test/              Vitest specs (health/chunk/reasoner/extract/ui keyless; retrieval/agent/eval on RUN_DB_TESTS)
 docs/adr/          architecture decision records
 ```
 

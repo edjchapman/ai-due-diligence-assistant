@@ -4,7 +4,7 @@
 agent, and — the headline — an evaluation loop that runs in CI so quality is _measured, not
 asserted_.**
 
-By [Ed Chapman](https://github.com/edjchapman) · MIT-licensed · [repository](https://github.com/edjchapman/AI-Due-Diligence-Assistant)
+By [Ed Chapman](https://github.com/edjchapman) · MIT-licensed · [repository](https://github.com/edjchapman/ai-due-diligence-assistant)
 
 ---
 
@@ -75,6 +75,14 @@ Ingest CLI ─▶ Postgres + pgvector ─▶ Fastify API ─▶ LangGraph.js age
   structured fields via Claude, with an LLM-as-judge quality gate), re-expressed on filings and in
   TypeScript. Amazon Textract (OCR / scanned filings) is a documented swap; see
   [ADR 0002](adr/0002-pdf-extraction.md).
+
+- **A demo UI that shows the system, not a chat box.** The public demo page is one
+  self-contained static HTML file (no build step, no framework, no external requests — it works
+  offline behind the rate limit). A report opens with a per-check verdict strip, then one card
+  per check pairing the agent's cited verdict with the **structured fields extracted from the
+  filing PDF** — two independent paths over the same source, corroborating each other on screen.
+  Light/dark follows the OS; a keyless contract test in CI pins the page to the API surface it
+  calls.
 
 - **A quality gate that reads like senior code.** Strict TypeScript, type-checked ESLint,
   Prettier, and a `make check` gate mirrored in CI and a pre-commit hook. `make demo` and
