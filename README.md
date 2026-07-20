@@ -6,6 +6,8 @@
 
 **▶ Live demo: <https://app-production-e60e.up.railway.app>** (keyless deterministic mode — see [API](#api)).
 
+**▶ Project page: <https://edwardchapman.co.uk/projects/ai-due-diligence-assistant>** (part of my portfolio).
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/demo-dark.png" />
   <img
