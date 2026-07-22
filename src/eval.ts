@@ -72,7 +72,7 @@ function printReport(report: EvalReport): void {
   for (const row of report.rows) {
     console.log(
       `  ${short(row.company).padEnd(22)} ${row.checkId.padEnd(22)} ` +
-        `${row.expected.padEnd(9)} ${String(row.actual).padEnd(9)} ${row.pass ? '✓' : '✗'}`,
+        `${row.expected.padEnd(9)} ${row.actual.padEnd(9)} ${row.pass ? '✓' : '✗'}`,
     );
   }
   const pct = Math.round(report.score * 100);

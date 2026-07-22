@@ -12,7 +12,13 @@ export function CompanyPicker({ companies, onPick }: CompanyPickerProps) {
   return (
     <div className="controls">
       {companies.map((c) => (
-        <button key={c} className="company" onClick={() => onPick(c)}>
+        <button
+          key={c}
+          className="company"
+          onClick={() => {
+            onPick(c);
+          }}
+        >
           {c}
         </button>
       ))}

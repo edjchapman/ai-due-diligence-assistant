@@ -69,6 +69,9 @@ export async function extract(text: string): Promise<Extraction> {
 }
 
 async function anthropicExtract(text: string): Promise<Extraction> {
+  // TODO(ai-sdk): generateObject is deprecated in favour of generateText +
+  // Output.object; migrating needs a keyed run to verify the anthropic path.
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const { object } = await generateObject({
     model: anthropic(MODEL),
     schema: extractionSchema,

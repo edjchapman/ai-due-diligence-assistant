@@ -112,7 +112,9 @@ const routes = (overrides: Record<string, { status: number; body: unknown }> = {
 };
 
 describe('App', () => {
-  beforeEach(() => stubFetch(routes()));
+  beforeEach(() => {
+    stubFetch(routes());
+  });
   afterEach(() => {
     // RTL only auto-cleans under vitest globals, which this repo doesn't use.
     cleanup();

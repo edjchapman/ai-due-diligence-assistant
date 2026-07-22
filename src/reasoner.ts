@@ -49,6 +49,9 @@ async function anthropicReason(
   chunks: CitedChunk[],
 ): Promise<Reasoned> {
   const evidence = chunks.map((c, i) => `[${i + 1}] (${c.sourceType}) ${c.content}`).join('\n\n');
+  // TODO(ai-sdk): generateObject is deprecated in favour of generateText +
+  // Output.object; migrating needs a keyed run to verify the anthropic path.
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const { object } = await generateObject({
     model: anthropic(MODEL),
     schema: verdictSchema,
@@ -99,12 +102,12 @@ function localReason(check: Check, chunks: CitedChunk[]): Reasoned {
           summary: 'Diversified customer base; no single-customer dependence.',
         };
       }
-      const pct = text.match(/(\d{2,3})\s?%/);
+      const pct = text.match(/(\d{2,3})\s?%/)?.[1];
       const concentrated = has(/largest customer|customer concentration|concentration of revenue/);
-      if (concentrated && pct && Number(pct[1]) >= 20) {
+      if (concentrated && pct && Number(pct) >= 20) {
         return {
           verdict: 'flagged',
-          summary: `Revenue concentrated in one customer (~${pct[1]}% of revenue).`,
+          summary: `Revenue concentrated in one customer (~${pct}% of revenue).`,
         };
       }
       return { verdict: 'uncertain', summary: 'Customer-concentration evidence is inconclusive.' };

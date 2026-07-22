@@ -11,11 +11,13 @@ export default tseslint.config(
   // build output of web/.
   { ignores: ['dist/', 'coverage/', 'drizzle/', 'node_modules/', 'public/'] },
 
-  // Base JS rules + type-aware TS rules across the project. recommendedTypeChecked
-  // is the high-signal set: it catches floating/misused promises and unsafe `any`
-  // flow — exactly the review signal a senior TS codebase should surface.
+  // Base JS rules + type-aware TS rules across the project. strictTypeChecked
+  // is recommendedTypeChecked (floating/misused promises, unsafe `any` flow)
+  // plus the stricter correctness rules — unnecessary conditions, confusing
+  // void expressions, unsound type assertions. The codebase is small enough
+  // that the strict set stays low-noise.
   eslint.configs.recommended,
-  tseslint.configs.recommendedTypeChecked,
+  tseslint.configs.strictTypeChecked,
 
   // Point the type-checked rules at the nearest tsconfig via the project service
   // (no hand-maintained `project` globs). tsconfig.json already includes src, test
@@ -26,6 +28,15 @@ export default tseslint.config(
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+
+  // One relaxation of the strict set: interpolating numbers into template
+  // literals is idiomatic and safe (unlike objects/arrays, they stringify
+  // predictably), so keep the recommended-set behaviour for them.
+  {
+    rules: {
+      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
     },
   },
 

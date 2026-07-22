@@ -47,6 +47,9 @@ function localJudge(expected: GoldenItem, finding: Finding): Judgement {
 }
 
 async function anthropicJudge(expected: GoldenItem, finding: Finding): Promise<Judgement> {
+  // TODO(ai-sdk): generateObject is deprecated in favour of generateText +
+  // Output.object; migrating needs a keyed run to verify the anthropic path.
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const { object } = await generateObject({
     model: anthropic(MODEL),
     schema: judgeSchema,

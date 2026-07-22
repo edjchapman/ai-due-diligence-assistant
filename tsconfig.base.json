@@ -1,0 +1,28 @@
+{
+  // Shared compiler options for the server project (tsconfig.json) and the web
+  // project (web/tsconfig.json) — one place, so the two strictness profiles
+  // can't drift. Project-specific bits (lib, jsx, types, include) stay in the
+  // extending configs.
+  //
+  // isolatedModules + verbatimModuleSyntax matter here because nothing runs
+  // through tsc for emit: tsx/esbuild (server) and Vite (web) transpile
+  // file-by-file, and these flags reject the constructs single-file
+  // transpilers can't handle — and enforce explicit `import type`, which is
+  // what guarantees the web bundle's server-source imports erase at build.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "noEmit": true
+  }
+}

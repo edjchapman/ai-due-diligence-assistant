@@ -29,7 +29,9 @@ export function SearchBar({ onSearch }: SearchBarProps) {
           placeholder="e.g. related-party lease"
           aria-label="Search query"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+          }}
         />
         <button id="searchBtn" type="submit">
           Search
