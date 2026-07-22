@@ -1,6 +1,7 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { embedQuery, embedTexts } from '../src/embeddings';
 import { EMBEDDING_DIMENSIONS } from '../src/db/schema';
+import { useLocalProviders } from './helpers';
 
 /** Dot product; both operands are unit-norm, so this is cosine similarity. */
 function dot(a: number[], b: number[]): number {
@@ -12,9 +13,7 @@ function dot(a: number[], b: number[]): number {
 // The keyless local embedder backs `make demo`, tests, and CI, so it's worth
 // pinning. No network, no API key.
 describe('local embedder (EMBED_PROVIDER=local)', () => {
-  beforeAll(() => {
-    process.env.EMBED_PROVIDER = 'local';
-  });
+  useLocalProviders('EMBED_PROVIDER');
 
   it('produces a unit-norm vector of the pinned dimensionality', async () => {
     const v = await embedQuery('going concern doubt');

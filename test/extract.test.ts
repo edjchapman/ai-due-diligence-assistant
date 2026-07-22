@@ -1,11 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Extraction } from '../src/extract';
 import { extract } from '../src/extract';
 import { EXTRACTION_F1_THRESHOLD, GOLDEN_EXTRACTIONS } from '../src/golden-extract';
 import { decodePdf } from '../src/pdf';
+import { useLocalProviders } from './helpers';
 
 const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 
@@ -35,10 +36,7 @@ function factsOf(
 }
 
 describe('structured extraction (EXTRACT_PROVIDER=local)', () => {
-  beforeAll(() => {
-    process.env.EXTRACT_PROVIDER = 'local';
-    process.env.PDF_PROVIDER = 'local';
-  });
+  useLocalProviders('EXTRACT_PROVIDER', 'PDF_PROVIDER');
 
   // Per-company: the extraction from the PDF must reproduce every planted fact.
   for (const golden of GOLDEN_EXTRACTIONS) {
