@@ -1,6 +1,6 @@
 {
   "name": "ai-due-diligence-assistant",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "AI due-diligence assistant: cited-source reports via a LangGraph.js agent, a CI-runnable eval harness, and a typed React 19 + Vite demo UI. TypeScript/Node.js portfolio project.",
