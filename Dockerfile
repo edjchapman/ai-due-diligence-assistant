@@ -10,7 +10,9 @@ FROM node:24-slim AS web
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
-COPY vite.config.ts ./
+# tsconfig.base.json is the extends target of web/tsconfig.json — esbuild
+# resolves the chain while transpiling, so the build fails without it.
+COPY vite.config.ts tsconfig.base.json ./
 COPY src ./src
 COPY web ./web
 RUN npm run build:web
