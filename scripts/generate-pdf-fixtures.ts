@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -112,7 +112,18 @@ function makeTextPdf(text: string): Buffer {
 const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 
 for (const { slug, text } of FIXTURES) {
+  // The PDF is serialized as latin1/WinAnsi, so anything outside Latin-1 (em
+  // dashes, curly quotes — common when pasting real filing text) would be
+  // silently mangled in the text layer. Reject it instead.
+  const bad = /[\u{100}-\u{10ffff}]/u.exec(text)?.[0];
+  if (bad !== undefined) {
+    throw new Error(
+      `[fixtures:pdf] ${slug}: "${bad}" is outside Latin-1 and would corrupt the ` +
+        'WinAnsi text layer — replace it with an ASCII equivalent.',
+    );
+  }
   const path = join(FIXTURES_DIR, slug, 'filing-summary.pdf');
+  mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, makeTextPdf(text));
   console.log(`[fixtures:pdf] wrote ${slug}/filing-summary.pdf`);
 }

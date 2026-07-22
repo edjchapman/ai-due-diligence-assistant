@@ -156,11 +156,3 @@ function localExtract(text: string): Extraction {
 
   return { revenueConcentration, relatedParties, goingConcern, auditor };
 }
-
-/** An all-empty extraction — the "nothing found" baseline (used for merges/defaults). */
-export const EMPTY_EXTRACTION: Extraction = {
-  revenueConcentration: { largestCustomerPct: null, largestCustomer: null, evidence: null },
-  relatedParties: [],
-  goingConcern: { substantialDoubt: false, evidence: null },
-  auditor: { changed: false, auditorName: null, evidence: null },
-};

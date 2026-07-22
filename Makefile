@@ -27,7 +27,11 @@ format-check: ## Prettier check (no writes)
 test: ## Vitest run
 	npm test
 
-check: typecheck lint format-check test ## Full quality gate (mirrors CI)
+# Deliberately DB-free and fast — it runs on every commit via pre-commit. CI
+# runs this same gate *plus* the DB-gated suites (RUN_DB_TESTS=1) and the eval
+# harness; run those locally with `make db-up && RUN_DB_TESTS=1 npm test` and
+# `make eval`.
+check: typecheck lint format-check test ## Static quality gate (CI adds DB suites + eval)
 
 db-up: ## Start the pgvector dev database (waits for healthy)
 	docker compose up -d --wait db

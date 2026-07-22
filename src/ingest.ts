@@ -104,7 +104,7 @@ async function ingestCompany(spec: CompanySpec): Promise<number> {
   return chunkCount;
 }
 
-export interface IngestResult {
+interface IngestResult {
   company: string;
   chunks: number;
 }

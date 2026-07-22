@@ -14,7 +14,7 @@ export interface CitedChunk {
   score: number;
 }
 
-export interface SearchOptions {
+interface SearchOptions {
   /** Restrict retrieval to one company's documents (exact match on `documents.company`). */
   company?: string;
 }
