@@ -1,7 +1,8 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { CHECKS, type Check } from '../src/checks';
 import type { CitedChunk } from '../src/db/search';
 import { reason } from '../src/reasoner';
+import { useLocalProviders } from './helpers';
 
 const byId = (id: string): Check => {
   const check = CHECKS.find((c) => c.id === id);
@@ -22,9 +23,7 @@ const verdictOf = (id: string, text: string) => reason(byId(id), 'Acme', [chunk(
 
 // Keyless: the local heuristic encodes the signals the golden set (M4) expects.
 describe('local reasoner (LLM_PROVIDER=local)', () => {
-  beforeAll(() => {
-    process.env.LLM_PROVIDER = 'local';
-  });
+  useLocalProviders('LLM_PROVIDER');
 
   it('flags going concern but reads its negation as clear', async () => {
     expect(

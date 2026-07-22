@@ -1,10 +1,9 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { inArray } from 'drizzle-orm';
-import { db, sql } from '../src/db/client';
-import { documents } from '../src/db/schema';
+import { afterAll, beforeAll, expect, it } from 'vitest';
+import { sql } from '../src/db/client';
 import { runEval } from '../src/eval';
 import { GOLDEN, GOLDEN_COMPANIES } from '../src/golden';
 import { ingestAll } from '../src/ingest';
+import { cleanupCompany, dbDescribe, useLocalProviders } from './helpers';
 
 /**
  * The eval harness as a CI regression gate: ingest the corpus, run the agent over
@@ -12,18 +11,15 @@ import { ingestAll } from '../src/ingest';
  * (local providers), gated on RUN_DB_TESTS; CI provides pgvector. A drop in the
  * score — from broken retrieval, scoping, the graph, or the golden set — fails CI.
  */
-const dbTests = process.env.RUN_DB_TESTS ? describe : describe.skip;
+dbDescribe('eval harness (golden set)', () => {
+  useLocalProviders('EMBED_PROVIDER', 'LLM_PROVIDER', 'JUDGE_PROVIDER');
 
-dbTests('eval harness (golden set)', () => {
   beforeAll(async () => {
-    process.env.EMBED_PROVIDER = 'local';
-    process.env.LLM_PROVIDER = 'local';
-    process.env.JUDGE_PROVIDER = 'local';
     await ingestAll();
   });
 
   afterAll(async () => {
-    await db.delete(documents).where(inArray(documents.company, GOLDEN_COMPANIES));
+    for (const company of GOLDEN_COMPANIES) await cleanupCompany(company);
     await sql.end();
   });
 
