@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install typecheck lint lint-fix format format-check test check demo serve eval db-up db-down
+.PHONY: help install typecheck lint lint-fix format format-check test check check-commit-msg demo serve eval db-up db-down
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -32,6 +32,11 @@ test: ## Vitest run
 # harness; run those locally with `make db-up && RUN_DB_TESTS=1 npm test` and
 # `make eval`.
 check: typecheck lint format-check test ## Static quality gate (CI adds DB suites + eval)
+
+# CI validates the PR title with the same script (commit-style.yml) — under
+# squash-merge the title becomes the permanent commit subject.
+check-commit-msg: ## Validate the last commit subject (Conventional Commits)
+	git log -1 --format=%s | ./scripts/check-commit-msg.sh --stdin --strict
 
 db-up: ## Start the pgvector dev database (waits for healthy)
 	docker compose up -d --wait db

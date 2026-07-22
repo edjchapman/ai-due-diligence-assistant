@@ -1,0 +1,22 @@
+name: scheduled-check
+
+on:
+  schedule:
+    # Mondays 09:00 UTC — catches drift from out-of-band changes (e.g. a
+    # dependency yank or runner-image change breaking main between pushes)
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  make-check:
+    name: make check (scheduled)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Run make check
+        run: make check
