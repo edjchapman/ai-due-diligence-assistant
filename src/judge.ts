@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { Finding } from './checks';
+import { getConfig } from './config';
 import type { GoldenItem } from './golden';
 
 /**
@@ -30,7 +31,7 @@ export async function judge(
   finding: Finding | undefined,
 ): Promise<Judgement> {
   if (!finding) return { pass: false, reason: 'agent produced no finding for this check' };
-  return process.env.JUDGE_PROVIDER === 'anthropic'
+  return getConfig().JUDGE_PROVIDER === 'anthropic'
     ? anthropicJudge(expected, finding)
     : localJudge(expected, finding);
 }

@@ -15,7 +15,8 @@
     "url": "https://github.com/edjchapman/ai-due-diligence-assistant/issues"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=24",
+    "npm": ">=11"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",

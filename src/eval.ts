@@ -2,6 +2,7 @@ import { argv } from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { runReport } from './agent';
 import type { Verdict } from './checks';
+import { assertProviderKeys, getConfig } from './config';
 import { sql } from './db/client';
 import { DEFAULT_THRESHOLD, GOLDEN, GOLDEN_COMPANIES } from './golden';
 import { ingestAll } from './ingest';
@@ -54,15 +55,14 @@ export async function runEval(): Promise<EvalReport> {
   const passes = rows.filter((r) => r.pass).length;
   const total = rows.length;
   const score = total === 0 ? 0 : passes / total;
-  const threshold = Number(process.env.EVAL_THRESHOLD ?? DEFAULT_THRESHOLD);
+  const threshold = getConfig().EVAL_THRESHOLD ?? DEFAULT_THRESHOLD;
   return { rows, passes, total, score, threshold, passed: score >= threshold };
 }
 
 const short = (s: string, n = 22): string => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
 function printReport(report: EvalReport): void {
-  const reasoning = process.env.LLM_PROVIDER === 'local' ? 'local' : 'anthropic';
-  const judgeProvider = process.env.JUDGE_PROVIDER === 'anthropic' ? 'anthropic' : 'local';
+  const { LLM_PROVIDER: reasoning, JUDGE_PROVIDER: judgeProvider } = getConfig();
   console.log(
     `\n  AI Due Diligence — evaluation   [reasoning: ${reasoning}, judge: ${judgeProvider}]\n`,
   );
@@ -83,6 +83,8 @@ function printReport(report: EvalReport): void {
 }
 
 async function main(): Promise<void> {
+  // The eval ingests (embed + extract), reasons every check, and judges.
+  assertProviderKeys('embed', 'extract', 'llm', 'judge');
   await ingestAll(); // idempotent; respects EMBED_PROVIDER (local for `make eval`)
   const report = await runEval();
   printReport(report);

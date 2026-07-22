@@ -1,5 +1,6 @@
 import { openai } from '@ai-sdk/openai';
 import { embed, embedMany } from 'ai';
+import { getConfig } from './config';
 import { EMBEDDING_DIMENSIONS } from './db/schema';
 
 /**
@@ -17,7 +18,7 @@ import { EMBEDDING_DIMENSIONS } from './db/schema';
  */
 const MODEL = 'text-embedding-3-small';
 
-const useLocalProvider = (): boolean => process.env.EMBED_PROVIDER === 'local';
+const useLocalProvider = (): boolean => getConfig().EMBED_PROVIDER === 'local';
 
 // Common English words carry no signal and, unfiltered, dominate a bag-of-words
 // vector — so distinctive terms ("concentration", "auditor") get drowned out.

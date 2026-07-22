@@ -50,12 +50,14 @@ is measured, not asserted. Built deliberately in **TypeScript/Node.js** (see `do
   a dedicated Docker stage builds it for deploys). Frontend hot-reload: `npm run dev:web`.
 
 **Provider switches (keep demos/CI keyless):** `EMBED_PROVIDER=local` (lexical embedder),
-`LLM_PROVIDER=local` (heuristic reasoner), `JUDGE_PROVIDER=local` (verdict-match judge), and
-`EXTRACT_PROVIDER=local` (regex extractor — the **default**, unlike the others) make `make demo`/
+`LLM_PROVIDER=local` (heuristic reasoner), `JUDGE_PROVIDER=local` (verdict-match judge — the
+**default**), and `EXTRACT_PROVIDER=local` (regex extractor — also the **default**) make `make demo`/
 `make eval` and the DB tests run with no API key. `PDF_PROVIDER=local` (default `unpdf`) decodes
-text-layer PDFs keyless; `PDF_PROVIDER=textract` is a documented swap, not built. Omit the reasoning/
-embedding/judge switches (defaults: OpenAI embeddings, Anthropic reasoning/judge, `EXTRACT_PROVIDER=anthropic`)
-for the real semantic + LLM-judged/extracted path.
+text-layer PDFs keyless; `PDF_PROVIDER=textract` is a documented swap, not built. For the real
+semantic + LLM path: omit the embed/reasoning switches (defaults: OpenAI embeddings, Anthropic
+reasoning) and set `JUDGE_PROVIDER=anthropic` / `EXTRACT_PROVIDER=anthropic` explicitly. All env
+vars are validated at boot by `src/config.ts` (zod enums — a typo'd provider fails loudly), and
+each entrypoint asserts the API keys for the capabilities it actually uses.
 
 ## Stack
 
@@ -79,7 +81,8 @@ web/               React 19 + Vite demo app — typed api client (imports server
 public/            BUILD OUTPUT of web/ (gitignored) — `npm run build:web`; served at / by Fastify
 vite.config.ts     Vite config: root web/, outDir public/, dev-server proxy to :3000
 railway.json       Railway deploy config (Dockerfile, /health probe)
-src/index.ts       entrypoint (listen)
+src/index.ts       entrypoint (listen + graceful shutdown)
+src/config.ts      zod-validated env config (getConfig) + per-entrypoint API-key assertions
 src/chunk.ts       paragraph-aware text chunker (pure)
 src/embeddings.ts  embeddings via Vercel AI SDK — OpenAI or keyless local (EMBED_PROVIDER)
 src/pdf.ts         decodePdf() — text-layer PDF → text (keyless unpdf; Textract documented, PDF_PROVIDER)

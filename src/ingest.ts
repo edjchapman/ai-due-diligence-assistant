@@ -4,6 +4,7 @@ import { dirname, extname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { eq } from 'drizzle-orm';
 import { chunkText } from './chunk';
+import { assertProviderKeys } from './config';
 import { db, sql } from './db/client';
 import { chunks, documents } from './db/schema';
 import { embedTexts } from './embeddings';
@@ -124,6 +125,7 @@ export async function ingestAll(filters: string[] = []): Promise<IngestResult[]>
 }
 
 async function main(): Promise<void> {
+  assertProviderKeys('embed', 'extract');
   const filters = argv.slice(2);
   const results = await ingestAll(filters);
   if (results.length === 0) {

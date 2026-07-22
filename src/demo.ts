@@ -1,5 +1,6 @@
 import { runReport } from './agent';
 import type { Finding, Verdict } from './checks';
+import { assertProviderKeys, getConfig } from './config';
 import { sql } from './db/client';
 import { getExtractions, listCompanies } from './db/search';
 
@@ -25,12 +26,12 @@ function renderFinding(finding: Finding): void {
 }
 
 async function main(): Promise<void> {
-  const reasoning =
-    process.env.LLM_PROVIDER === 'local'
-      ? 'local heuristic (keyless)'
-      : 'anthropic · claude-sonnet-4-6';
+  // The demo retrieves (query embedding) and reasons; it reads extractions from the DB.
+  assertProviderKeys('embed', 'llm');
+  const localReasoning = getConfig().LLM_PROVIDER === 'local';
+  const reasoning = localReasoning ? 'local heuristic (keyless)' : 'anthropic · claude-sonnet-4-6';
   console.log(`\n  AI Due Diligence — audit report demo   [reasoning: ${reasoning}]`);
-  if (process.env.LLM_PROVIDER === 'local') {
+  if (localReasoning) {
     console.log(
       '  (heuristic stand-in — set ANTHROPIC_API_KEY and LLM_PROVIDER=anthropic for the model)',
     );

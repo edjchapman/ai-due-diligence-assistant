@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { generateObject } from 'ai';
 import { z } from 'zod';
+import { getConfig } from './config';
 
 /**
  * Structured extraction (M6) — the front half of the system: turn a filing's
@@ -60,7 +61,7 @@ const extractionSchema = z.object({
 
 export type Extraction = z.infer<typeof extractionSchema>;
 
-const useLocalProvider = (): boolean => process.env.EXTRACT_PROVIDER !== 'anthropic';
+const useLocalProvider = (): boolean => getConfig().EXTRACT_PROVIDER === 'local';
 
 /** Extract typed DD fields from a document's decoded text. */
 export async function extract(text: string): Promise<Extraction> {

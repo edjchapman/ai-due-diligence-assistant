@@ -1,10 +1,12 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
+import { getConfig } from '../config';
 
-const connectionString = process.env.DATABASE_URL ?? 'postgres://postgres@localhost:5432/ai_dd';
-
-const client = postgres(connectionString, { max: 1 });
-await migrate(drizzle(client), { migrationsFolder: './drizzle' });
-await client.end();
-console.log('migrations applied');
+const client = postgres(getConfig().DATABASE_URL, { max: 1 });
+try {
+  await migrate(drizzle(client), { migrationsFolder: './drizzle' });
+  console.log('migrations applied');
+} finally {
+  await client.end();
+}

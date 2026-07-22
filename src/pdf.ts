@@ -1,4 +1,5 @@
 import { extractText, getDocumentProxy } from 'unpdf';
+import { getConfig } from './config';
 
 /**
  * Decode a PDF's text layer to plain text (M6). This is the "front-door" that
@@ -19,7 +20,7 @@ import { extractText, getDocumentProxy } from 'unpdf';
  * reconstruction (see ADR 0002 / M6 non-goals).
  */
 export async function decodePdf(bytes: Uint8Array): Promise<string> {
-  if (process.env.PDF_PROVIDER === 'textract') {
+  if (getConfig().PDF_PROVIDER === 'textract') {
     throw new Error(
       'PDF_PROVIDER=textract is a documented swap, not built — see docs/adr/0002-pdf-extraction.md',
     );

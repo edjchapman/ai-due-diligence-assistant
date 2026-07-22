@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { Check, Verdict } from './checks';
+import { getConfig } from './config';
 import type { CitedChunk } from './db/search';
 
 /**
@@ -24,7 +25,7 @@ export interface Reasoned {
   summary: string;
 }
 
-const useLocalProvider = (): boolean => process.env.LLM_PROVIDER === 'local';
+const useLocalProvider = (): boolean => getConfig().LLM_PROVIDER === 'local';
 
 const verdictSchema = z.object({
   verdict: z.enum(['flagged', 'clear', 'uncertain']),
