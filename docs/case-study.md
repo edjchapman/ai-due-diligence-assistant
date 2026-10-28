@@ -34,9 +34,9 @@ report: a verdict (`flagged` / `clear` / `uncertain`) per check, a one-line summ
 ## Architecture
 
 ```
-Ingest CLI ─▶ Postgres + pgvector ─▶ Fastify API ─▶ LangGraph.js agent ─▶ Eval harness (in CI)
-   (chunk + embed)   (cosine + HNSW)    (/search,       (node per check:      (golden set +
-                                         /report)        retrieve → reason      LLM-as-judge)
+Ingest CLI ─▶ Postgres + pgvector ─▶ Fastify API ─▶ LangGraph.js agent ─▶ Eval harness
+   (chunk + embed)   (cosine + HNSW)    (/search,       (node per check:      (golden gate in CI;
+                                         /report)        retrieve → reason      keyed LLM-as-judge)
                                                          → cite)
 ```
 
@@ -46,8 +46,8 @@ Ingest CLI ─▶ Postgres + pgvector ─▶ Fastify API ─▶ LangGraph.js age
   company-scoped evidence, reasons a verdict (Claude via the Vercel AI SDK), and appends a cited
   finding. The graph is the inspectable artefact.
 - **Evaluation** — the harness runs the agent over reference companies and scores every finding
-  against a **golden set** with an **LLM-as-judge**. It runs in CI on every push and fails the
-  build below threshold.
+  against a **golden set**. A deterministic gate runs in CI on every push and fails the build
+  below threshold; an **LLM-as-judge** scores live, Claude-reasoned reports when keys are supplied.
 
 ## Engineering decisions that carried weight
 

@@ -20,7 +20,8 @@
 
 > **Status: `M7` (typed React frontend — [ADR 0003](docs/adr/0003-react-frontend.md)).** The full system is in place: PDF/Markdown
 > ingest → cited retrieval → a LangGraph.js agent (`GET /report/:company`) → an **eval harness that
-> scores every finding against a golden set and runs in CI on every push** (see [Evaluation](#evaluation)).
+> scores every finding against a golden set: a deterministic gate in CI on every push, plus a keyed
+> LLM-as-judge for live reports** (see [Evaluation](#evaluation)).
 > M6 adds the "front half": a real filing **PDF** is decoded (keyless) and structured into typed DD
 > fields (`GET /extract/:company`), scored with a precision/recall/F1 test — see
 > [ADR 0002](docs/adr/0002-pdf-extraction.md). A demo page, rate-limited endpoints, and a
@@ -34,7 +35,7 @@ Most engineers can call an LLM API. Fewer can show a _system_ around it: retriev
 ## Architecture (target)
 
 ```text
-Ingest CLI (TS) ─▶ Postgres + pgvector (Drizzle) ─▶ Fastify API ─▶ LangGraph.js agent ─▶ Eval harness (golden + LLM-as-judge, in CI)
+Ingest CLI (TS) ─▶ Postgres + pgvector (Drizzle) ─▶ Fastify API ─▶ LangGraph.js agent ─▶ Eval harness (golden gate in CI + keyed LLM-as-judge)
 ```
 
 - **Fastify** typed HTTP surface — a demo page at `/`, plus `/health`, `/companies`, `/search`, `/report/:company`, `/extract/:company` (rate-limited). The eval harness is a CLI + CI gate, not an endpoint.
@@ -223,8 +224,8 @@ curl "$BASE/extract/northwind"
 
 The headline signal: quality is **measured, not asserted**. The harness runs the agent over
 every reference company and scores each finding against a **golden set** (the expected verdicts,
-planted in the fixtures) with an **LLM-as-judge**. It runs in CI on every push and fails the
-build below threshold.
+planted in the fixtures). A deterministic gate runs in CI on every push and fails the build below
+threshold; an **LLM-as-judge** scores live, Claude-reasoned reports when keys are supplied.
 
 ```bash
 make eval   # keyless: ingest → run agent → score vs golden → PASS/FAIL
@@ -302,7 +303,7 @@ make eval           # the eval harness (keyless)
 - [x] **M1** — repo + typed Fastify skeleton (`/health`), Postgres/pgvector schema (Drizzle), Docker, CI green.
 - [x] **M2** — ingest CLI + OpenAI embeddings + cited retrieval (`/search`); pgvector integration test in CI.
 - [x] **M3** — LangGraph.js DD-check agent (node per check) + `GET /report/:company` with citations.
-- [x] **M4** — eval harness (golden set + LLM-as-judge) scoring the agent, running in CI (`12/12`).
+- [x] **M4** — eval harness scoring the agent against a golden set: deterministic gate in CI (`12/12`), keyed LLM-as-judge for live runs.
 - [x] **M5** — demo page + rate-limited endpoints + [case study](docs/case-study.md); **deployed live on Railway** ([demo](https://app-production-e60e.up.railway.app)).
 - [x] **M6** — PDF ingestion (keyless `unpdf`) + structured extraction (`GET /extract/:company`) with a field-level precision/recall/F1 test ([ADR 0002](docs/adr/0002-pdf-extraction.md)).
 - [x] **M7** — typed React 19 + Vite frontend (`web/`) with shared server types, component tests, and a built-artifact contract test in CI ([ADR 0003](docs/adr/0003-react-frontend.md)).
